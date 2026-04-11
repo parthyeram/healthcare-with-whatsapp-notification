@@ -14,33 +14,107 @@ AI Chatbot — Powered by Anthropic Claude for health queries
 WhatsApp Reminders — OTP-verified WhatsApp medicine reminders with scheduling, logs, and adherence stats (Twilio)
 
 Project Structure
-healthcareplus+/
-├── backend/
-│   ├── db/
-│   │   ├── connection.js            # MySQL connection pool
-│   │   ├── schema.sql               # Main database schema
-│   │   └── schema_reminders.sql     # WhatsApp reminders schema (run after schema.sql)
-│   ├── jobs/
-│   │   ├── whatsapp.js              # Twilio WhatsApp sender + message templates
-│   │   └── scheduler.js             # Cron jobs — reminders, weekly summary, low-stock alerts
-│   ├── routes/
-│   │   ├── auth.js                  # Register / login / JWT
-│   │   ├── doctors.js               # Doctor listings
-│   │   ├── appointments.js          # Appointment CRUD
-│   │   ├── records.js               # Health records + medicines + hospitals
-│   │   ├── chatbot.js               # Claude AI chatbot
-│   │   └── reminders.js             # WhatsApp reminder API (full CRUD + webhook)
-│   ├── .env.example                 # Environment variable template
-│   ├── package.json
-│   └── server.js                    # Express app entry point
-└── frontend/
-    ├── index.html                   # Single-page app (all sections)
-    ├── css/
-    │   └── styles.css               # All styles including WhatsApp reminder styles
-    └── js/
-        └── main.js                  # All frontend logic including reminder JS
 
-
+🏥 healthcareplus+/
+├── 
+📁
+backend/
+│   ├── 
+📁
+db/
+│   │   ├── 
+🗄️
+connection.js
+MySQL connection pool
+│   │   ├── 
+📋
+schema.sql
+Main database schema
+│   │   └── 
+📋
+schema_reminders.sql
+WhatsApp reminders schema
+new
+│   ├── 
+📁
+jobs/
+│   │   ├── 
+💬
+whatsapp.js
+Twilio sender + message templates
+new
+│   │   └── 
+⏱️
+scheduler.js
+Cron jobs — reminders, weekly summary, low-stock alerts
+new
+│   ├── 
+📁
+routes/
+│   │   ├── 
+🔐
+auth.js
+Register / login / JWT
+│   │   ├── 
+👨‍⚕️
+doctors.js
+Doctor listings
+│   │   ├── 
+📅
+appointments.js
+Appointment CRUD
+│   │   ├── 
+📁
+records.js
+Health records + medicines + hospitals
+│   │   ├── 
+🤖
+chatbot.js
+Claude AI chatbot
+│   │   └── 
+🔔
+reminders.js
+WhatsApp reminder API (full CRUD + webhook)
+new
+│   ├── 
+⚙️
+.env.example
+Environment variable template
+updated
+│   ├── 
+📦
+package.json
+Dependencies incl. twilio, node-cron, moment-timezone
+updated
+│   └── 
+🟨
+server.js
+Express app entry point
+updated
+└── 
+📁
+frontend/
+    ├── 
+🌐
+index.html
+Single-page app (all sections)
+updated
+    ├── 
+📁
+css/
+    │   └── 
+🎨
+styles.css
+All styles including WhatsApp reminder styles
+updated
+    └── 
+📁
+js/
+        └── 
+🟨
+main.js
+All frontend logic including reminder JS
+updated
 
 Tech Stack
 Backend — Node.js, Express, MySQL2, JWT, bcryptjs, Multer, Twilio, node-cron, moment-timezone, Anthropic SDK
