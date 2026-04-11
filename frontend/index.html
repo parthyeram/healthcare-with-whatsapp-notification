@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Healthcare+ | Your Complete Health Companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     NAVIGATION
+════════════════════════════════════════ -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#" class="brand" onclick="showSec('home');return false">
+      <span class="brand-ico">🏥</span>
+      <span class="brand-tx">Healthcare<span class="brand-plus">+</span></span>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <span class="nl on" data-s="home"      onclick="showSec('home')">Home</span>
+      <span class="nl"    data-s="doctors"   onclick="showSec('doctors')">Find Doctors</span>
+      <span class="nl"    data-s="hospitals" onclick="showSec('hospitals')">Hospitals</span>
+      <span class="nl"    data-s="appointments" onclick="showSec('appointments')">Appointments</span>
+      <span class="nl"    data-s="records"   onclick="showSec('records')">Health Records</span>
+      <span class="nl"    data-s="medicines" onclick="showSec('medicines')">Medicines</span>
+    </div>
+    <div class="nav-end">
+      <div class="nav-user" id="navUser" style="display:none">
+        <div class="nav-user-chip">
+          <span class="nav-user-av" id="navUserAv">U</span>
+          <div class="nav-user-meta">
+            <span class="nav-user-label">Signed in as</span>
+            <span class="nav-user-name" id="navUserName">User</span>
+          </div>
+        </div>
+        <button class="btn-signin" type="button" onclick="logout()">Logout</button>
+      </div>
+      <div class="nav-auth" id="navAuth">
+        <button class="btn-signin" type="button" onclick="openM('mLogin')">Sign In</button>
+        <button class="btn-start" type="button" onclick="openM('mReg')">Get Started</button>
+      </div>
+      <button class="ham" id="ham" onclick="document.getElementById('navLinks').classList.toggle('open')">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     HOME SECTION
+════════════════════════════════════════ -->
+<section id="home" class="sec on">
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-bg">
+      <div class="orb o1"></div>
+      <div class="orb o2"></div>
+      <div class="orb o3"></div>
+    </div>
+    <div class="container hero-grid">
+      <!-- Left copy -->
+      <div>
+        <div class="h-badge">✨ Trusted by 50,000+ patients across India</div>
+        <h1 class="h-title">
+          Your Complete<br/>
+          <em>Health Companion</em><br/>
+          <span class="h-grad">In One Place</span>
+        </h1>
+        <p class="h-desc">
+          Book appointments, track medicines, save health records, and get
+          AI-powered doctor recommendations — all in one beautiful platform.
+        </p>
+        <div class="h-btns">
+          <button class="btn btn-p lg" onclick="showSec('doctors')">
+            <i class="fas fa-search"></i> Find a Doctor
+          </button>
+          <button class="btn btn-o lg" onclick="openChat()">
+            <i class="fas fa-robot"></i> Ask HealthBot
+          </button>
+        </div>
+        <div class="h-stats">
+          <div class="stat"><span class="s-num">500+</span><span class="s-lbl">Doctors</span></div>
+          <div class="sdiv"></div>
+          <div class="stat"><span class="s-num">50+</span><span class="s-lbl">Hospitals</span></div>
+          <div class="sdiv"></div>
+          <div class="stat"><span class="s-num">24/7</span><span class="s-lbl">AI Support</span></div>
+          <div class="sdiv"></div>
+          <div class="stat"><span class="s-num">4.9⭐</span><span class="s-lbl">Rating</span></div>
+        </div>
+      </div>
+      <!-- Right visual cards -->
+      <div class="h-visual">
+        <div class="hc hc-main">
+          <div class="card-row">
+            <div class="dc-av">👨‍⚕️</div>
+            <div>
+              <div class="dc-nm">Dr. Rajesh Kumar</div>
+              <div class="dc-sp">Cardiologist</div>
+            </div>
+            <div class="avail-pill">Available</div>
+          </div>
+          <div class="mini-r">
+            <span>⭐ 4.8</span><span>15 yrs exp</span><span>₹800</span>
+          </div>
+          <button class="book-mini" onclick="showSec('appointments')">
+            Book Appointment →
+          </button>
+        </div>
+        <div class="hc hc-fl hc-chat">
+          <span style="font-size:1.3rem">🤖</span>
+          <span>"I have knee pain, which doctor?"</span>
+        </div>
+        <div class="hc hc-fl hc-rep">
+          💬 See an <strong>Orthopedic Doctor</strong> 🦴
+        </div>
+        <div class="hc hc-fl hc-med">
+          <span style="font-size:1.5rem">💊</span>
+          <div>
+            <div class="med-n">Metformin 500mg</div>
+            <div class="med-t">⏰ 8:00 AM — Take after breakfast</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service quick-access strip -->
+    <div class="container svc-strip">
+      <div class="svc-card" onclick="showSec('doctors')">
+        <span class="svc-ico">👨‍⚕️</span><span class="svc-lbl">Find Doctor</span><span class="svc-arr">→</span>
+      </div>
+      <div class="svc-card" onclick="showSec('appointments')">
+        <span class="svc-ico">📅</span><span class="svc-lbl">Book Appointment</span><span class="svc-arr">→</span>
+      </div>
+      <div class="svc-card" onclick="showSec('records')">
+        <span class="svc-ico">📋</span><span class="svc-lbl">Health Records</span><span class="svc-arr">→</span>
+      </div>
+      <div class="svc-card" onclick="showSec('medicines')">
+        <span class="svc-ico">💊</span><span class="svc-lbl">Medicines</span><span class="svc-arr">→</span>
+      </div>
+      <div class="svc-card" onclick="showSec('hospitals')">
+        <span class="svc-ico">🏥</span><span class="svc-lbl">Hospitals</span><span class="svc-arr">→</span>
+      </div>
+      <div class="svc-card" onclick="openChat()">
+        <span class="svc-ico">🤖</span><span class="svc-lbl">AI HealthBot</span><span class="svc-arr">→</span>
+      </div>
+    </div>
+  </div><!-- /hero -->
+
+  <!-- Specialization grid -->
+  <div class="spec-sec">
+    <div class="container">
+      <div class="sec-hd">
+        <h2 class="sec-title">Browse by Specialization</h2>
+        <p class="sec-sub">Find the right specialist for your health needs</p>
+      </div>
+      <div class="spec-grid">
+        <div class="spec-c" onclick="filterDoc('Cardiologist')">      <span class="ico">❤️</span><span>Cardiologist</span></div>
+        <div class="spec-c" onclick="filterDoc('Orthopedic')">        <span class="ico">🦴</span><span>Orthopedic</span></div>
+        <div class="spec-c" onclick="filterDoc('Neurologist')">       <span class="ico">🧠</span><span>Neurologist</span></div>
+        <div class="spec-c" onclick="filterDoc('Dermatologist')">     <span class="ico">🔬</span><span>Dermatologist</span></div>
+        <div class="spec-c" onclick="filterDoc('Pediatrician')">      <span class="ico">👶</span><span>Pediatrician</span></div>
+        <div class="spec-c" onclick="filterDoc('Gynecologist')">      <span class="ico">🏥</span><span>Gynecologist</span></div>
+        <div class="spec-c" onclick="filterDoc('Ophthalmologist')">   <span class="ico">👁️</span><span>Eye Doctor</span></div>
+        <div class="spec-c" onclick="filterDoc('ENT')">               <span class="ico">👂</span><span>ENT Specialist</span></div>
+        <div class="spec-c" onclick="filterDoc('Pulmonologist')">     <span class="ico">🫁</span><span>Pulmonologist</span></div>
+        <div class="spec-c" onclick="filterDoc('Gastroenterologist')"><span class="ico">🍽️</span><span>Gastro</span></div>
+        <div class="spec-c" onclick="filterDoc('Endocrinologist')">   <span class="ico">🩺</span><span>Endocrinologist</span></div>
+        <div class="spec-c" onclick="filterDoc('Psychiatrist')">      <span class="ico">🧘</span><span>Psychiatrist</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     DOCTORS SECTION
+════════════════════════════════════════ -->
+<section id="doctors" class="sec">
+  <div class="container">
+    <div class="sec-hd">
+      <h2 class="sec-title">Find Your Doctor</h2>
+      <p class="sec-sub">AI-powered smart search — type a symptom, body part, or specialty</p>
+    </div>
+
+    <!-- AI search bar -->
+    <div class="ai-bar">
+      <div class="ai-wrap">
+        <span class="si"><i class="fas fa-search"></i></span>
+        <input type="text" class="ai-inp" id="docSearch"
+          placeholder='Try "heart pain", "knee injury", "skin rash", "blurry vision"…'
+          onkeydown="if(event.key==='Enter') aiSearch()"/>
+        <button class="btn-ai" onclick="aiSearch()">
+          <i class="fas fa-robot"></i> AI Search
+        </button>
+      </div>
+      <div class="ai-sug" id="aiSug"></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filt-row">
+      <select class="fsel" id="specFilt" onchange="renderDocs()">
+        <option value="">All Specializations</option>
+        <option>Cardiologist</option><option>Orthopedic</option><option>Neurologist</option>
+        <option>Dermatologist</option><option>Pediatrician</option><option>Gynecologist</option>
+        <option>Ophthalmologist</option><option>ENT Specialist</option><option>Pulmonologist</option>
+        <option>Gastroenterologist</option><option>Endocrinologist</option><option>Psychiatrist</option>
+        <option>General Physician</option>
+      </select>
+      <select class="fsel" id="hospFilt" onchange="renderDocs()">
+        <option value="">All Hospitals</option>
+        <option>Apollo Hospitals</option><option>Fortis Healthcare</option>
+        <option>Max Super Speciality</option><option>Kokilaben Ambani</option>
+        <option>Narayana Health</option>
+      </select>
+      <button class="fres" onclick="resetDocFilt()">↺ Reset</button>
+    </div>
+
+    <div class="doc-grid" id="docGrid">
+      <div class="ldg"><div class="spin"></div><p>Loading doctors…</p></div>
+    </div>
+    <div class="pg" id="docPg"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     HOSPITALS SECTION
+════════════════════════════════════════ -->
+<section id="hospitals" class="sec">
+  <div class="container">
+    <div class="sec-hd">
+      <h2 class="sec-title">Our Partner Hospitals</h2>
+      <p class="sec-sub">Tied-up with India's finest healthcare institutions</p>
+    </div>
+    <div class="hosp-grid" id="hospGrid"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     APPOINTMENTS SECTION
+════════════════════════════════════════ -->
+<section id="appointments" class="sec">
+  <div class="container">
+    <div class="sec-hd">
+      <h2 class="sec-title">Book an Appointment</h2>
+      <p class="sec-sub">Schedule a consultation with your preferred doctor</p>
+    </div>
+    <div class="appt-layout">
+      <!-- Booking form -->
+      <div class="form-wrap sticky-panel">
+        <h3><i class="fas fa-calendar-plus" style="color:var(--blue)"></i> New Appointment</h3>
+
+        <div class="fg">
+          <label>Select Doctor</label>
+          <select id="apptDoc" class="fc" onchange="loadSlots()">
+            <option value="">Choose a doctor…</option>
+            <option value="1">Dr. Rajesh Kumar — Cardiologist</option>
+            <option value="2">Dr. Priya Sharma — Orthopedic</option>
+            <option value="3">Dr. Anand Mehta — Neurologist</option>
+            <option value="4">Dr. Sunita Patel — Dermatologist</option>
+            <option value="5">Dr. Vikram Singh — Pediatrician</option>
+            <option value="6">Dr. Meera Nair — Gynecologist</option>
+            <option value="7">Dr. Suresh Reddy — Gastroenterologist</option>
+            <option value="8">Dr. Kavita Joshi — Endocrinologist</option>
+            <option value="9">Dr. Amit Gupta — Psychiatrist</option>
+            <option value="10">Dr. Pooja Iyer — Ophthalmologist</option>
+            <option value="11">Dr. Rahul Verma — General Physician</option>
+            <option value="12">Dr. Nisha Kapoor — Pulmonologist</option>
+          </select>
+        </div>
+
+        <div class="fg">
+          <label>Appointment Date</label>
+          <input type="date" id="apptDate" class="fc" onchange="loadSlots()"/>
+        </div>
+
+        <div class="fg">
+          <label>Available Time Slots</label>
+          <div class="slots-g" id="slotsG">
+            <p class="slot-hint">Select doctor and date to see slots</p>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label>Your Full Name</label>
+          <input type="text" id="pName" class="fc" placeholder="Full name"/>
+        </div>
+
+        <div class="fg">
+          <label>Phone Number</label>
+          <input type="tel" id="pPhone" class="fc" placeholder="+91 XXXXX XXXXX"/>
+        </div>
+
+        <div class="fg">
+          <label>Reason for Visit</label>
+          <textarea id="apptRsn" class="fc" rows="3" placeholder="Briefly describe your symptoms…"></textarea>
+        </div>
+
+        <button class="btn btn-p block" onclick="bookAppt()">
+          <i class="fas fa-calendar-check"></i> Confirm Appointment
+        </button>
+      </div>
+
+      <!-- My appointments list -->
+      <div class="appt-panel">
+        <div class="panel-hd">
+          <i class="fas fa-list" style="color:var(--blue)"></i> My Appointments
+        </div>
+        <div class="tab-row">
+          <button class="tab on"  onclick="filtAppts('all',this)">All</button>
+          <button class="tab"     onclick="filtAppts('pending',this)">Pending</button>
+          <button class="tab"     onclick="filtAppts('confirmed',this)">Confirmed</button>
+          <button class="tab"     onclick="filtAppts('completed',this)">Completed</button>
+        </div>
+        <div id="apptList">
+          <div class="empty"><span>📅</span><p>No appointments yet. Book your first!</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     HEALTH RECORDS SECTION
+════════════════════════════════════════ -->
+<section id="records" class="sec">
+  <div class="container">
+    <div class="sec-hd">
+      <h2 class="sec-title">Health Records</h2>
+      <p class="sec-sub">Securely store prescriptions, lab reports &amp; medical images</p>
+    </div>
+    <div class="rec-layout">
+      <!-- Upload form -->
+      <div class="form-wrap sticky-panel">
+        <h3><i class="fas fa-cloud-upload-alt" style="color:var(--blue)"></i> Upload Record</h3>
+
+        <div class="fg">
+          <label>Record Type</label>
+          <select id="recType" class="fc">
+            <option value="prescription">📋 Prescription</option>
+            <option value="lab_report">🧪 Lab Report</option>
+            <option value="xray">🩻 X-Ray</option>
+            <option value="mri">🔬 MRI Scan</option>
+            <option value="scan">📸 Other Scan</option>
+            <option value="vaccination">💉 Vaccination</option>
+            <option value="other">📁 Other</option>
+          </select>
+        </div>
+
+        <div class="fg">
+          <label>Title</label>
+          <input type="text" id="recTitle" class="fc" placeholder="e.g. Blood Test Report – Jan 2025"/>
+        </div>
+
+        <div class="fg">
+          <label>Doctor / Hospital</label>
+          <div class="ir">
+            <input type="text" id="recDoc"  class="fc" placeholder="Doctor name"/>
+            <input type="text" id="recHosp" class="fc" placeholder="Hospital"/>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label>Record Date</label>
+          <input type="date" id="recDate" class="fc"/>
+        </div>
+
+        <div class="fg">
+          <label>Upload Image / Document</label>
+          <div class="upload-z" id="upZ" onclick="document.getElementById('recFile').click()">
+            <div id="upInner">
+              <div class="up-ico"><i class="fas fa-cloud-upload-alt"></i></div>
+              <p class="up-p">Click to upload or drag &amp; drop</p>
+              <span class="up-hint">PNG, JPG, PDF up to 10 MB</span>
+            </div>
+            <input type="file" id="recFile" accept="image/*,.pdf" hidden onchange="prevFile(this)"/>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label>Tags <small>(comma-separated)</small></label>
+          <input type="text" id="recTags" class="fc" placeholder="diabetes, routine, urgent"/>
+        </div>
+
+        <div class="fg">
+          <label>Notes</label>
+          <textarea id="recDesc" class="fc" rows="2" placeholder="Additional notes…"></textarea>
+        </div>
+
+        <button class="btn btn-p block" onclick="saveRec()">
+          <i class="fas fa-save"></i> Save Record
+        </button>
+      </div>
+
+      <!-- Records list -->
+      <div class="appt-panel">
+        <div class="rec-list-hd">
+          <div class="panel-hd" style="margin-bottom:0">
+            <i class="fas fa-folder-open" style="color:var(--blue)"></i> My Records
+          </div>
+          <select class="fsel-sm" id="recFilt" onchange="filtRecs()">
+            <option value="">All Types</option>
+            <option value="prescription">Prescriptions</option>
+            <option value="lab_report">Lab Reports</option>
+            <option value="xray">X-Rays</option>
+            <option value="mri">MRI Scans</option>
+            <option value="vaccination">Vaccinations</option>
+          </select>
+        </div>
+        <div class="rec-grid" id="recList">
+          <div class="empty" style="grid-column:1/-1"><span>📋</span><p>No records saved yet.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     MEDICINES SECTION
+════════════════════════════════════════ -->
+<section id="medicines" class="sec">
+  <div class="container">
+    <div class="sec-hd">
+      <h2 class="sec-title">Medicine Tracker</h2>
+      <p class="sec-sub">Track your prescriptions and never miss a dose</p>
+    </div>
+    <div class="med-layout">
+      <!-- Add medicine form -->
+      <div class="form-wrap sticky-panel">
+        <h3><i class="fas fa-pills" style="color:var(--blue)"></i> Add Medicine</h3>
+
+        <div class="fg"><label>Medicine Name</label>
+          <input type="text" id="mName" class="fc" placeholder="e.g. Metformin 500mg"/>
+        </div>
+        <div class="fg"><label>Dosage</label>
+          <input type="text" id="mDose" class="fc" placeholder="e.g. 1 tablet, 5 ml"/>
+        </div>
+        <div class="fr2">
+          <div class="fg"><label>Frequency</label>
+            <select id="mFreq" class="fc">
+              <option>Once daily</option><option>Twice daily</option>
+              <option>Three times daily</option><option>Every 4 hours</option>
+              <option>Every 6 hours</option><option>Every 8 hours</option>
+              <option>As needed</option>
+            </select>
+          </div>
+          <div class="fg"><label>Timing</label>
+            <select id="mTiming" class="fc">
+              <option>Before meals</option><option>After meals</option>
+              <option>With meals</option><option>Before sleep</option>
+              <option>Empty stomach</option><option>Anytime</option>
+            </select>
+          </div>
+        </div>
+        <div class="fr2">
+          <div class="fg"><label>Start Date</label>
+            <input type="date" id="mStart" class="fc"/>
+          </div>
+          <div class="fg"><label>End Date</label>
+            <input type="date" id="mEnd" class="fc"/>
+          </div>
+        </div>
+        <div class="fr2">
+          <div class="fg"><label>Prescribed By</label>
+            <input type="text" id="mDr" class="fc" placeholder="Doctor name"/>
+          </div>
+          <div class="fg"><label>Stock Count</label>
+            <input type="number" id="mStock" class="fc" placeholder="0" min="0"/>
+          </div>
+        </div>
+        <div class="fg"><label>Notes</label>
+          <textarea id="mNotes" class="fc" rows="2" placeholder="Special instructions…"></textarea>
+        </div>
+        <button class="btn btn-p block" onclick="addMed()">
+          <i class="fas fa-plus-circle"></i> Add to Tracker
+        </button>
+      </div>
+
+      <!-- Medicines list -->
+      <div class="appt-panel">
+        <div class="med-panel-hd">
+          <div>
+            <div class="panel-hd" style="margin-bottom:0">
+              <i class="fas fa-list-ul" style="color:var(--blue)"></i> My Medicines
+            </div>
+            <div class="tab-row" style="margin-bottom:0;border:none;padding:0">
+              <button class="tab on" onclick="filtMeds('active',this)">Active</button>
+              <button class="tab"    onclick="filtMeds('completed',this)">Completed</button>
+              <button class="tab"    onclick="filtMeds('all',this)">All</button>
+            </div>
+          </div>
+          <button class="btn btn-o" id="waTestBtn" onclick="sendWhatsAppTest()" style="height:38px;align-self:flex-start;font-size:.75rem">
+            <i class="fas fa-phone"></i> Send WhatsApp reminder
+          </button>
+        </div>
+
+        <!-- Today's schedule -->
+        <div class="sched-box">
+          <div class="sched-title">📅 Today's Schedule</div>
+          <div id="sched">
+            <p style="font-size:.78rem;color:var(--gray);text-align:center">Add medicines to see today's schedule</p>
+          </div>
+        </div>
+
+        <div id="medList">
+          <div class="empty"><span>💊</span><p>No medicines tracked yet.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     AI CHATBOT
+════════════════════════════════════════ -->
+<div class="cfab" id="cfab" onclick="toggleChat()">
+  <div class="cfab-ico">🤖</div>
+  <div class="cpulse"></div>
+  <div class="cbadge">AI</div>
+</div>
+
+<div class="cpanel" id="cpanel">
+  <div class="c-hd">
+    <div class="c-hd-l">
+      <div class="c-av">🤖</div>
+      <div>
+        <div class="c-nm">HealthBot+</div>
+        <div class="c-st"><span class="stdot"></span> Online 24/7</div>
+      </div>
+    </div>
+    <div class="c-hd-r">
+      <button class="iBtn" onclick="clearChat()" title="Clear chat">
+        <i class="fas fa-trash-alt"></i>
+      </button>
+      <button class="iBtn" onclick="toggleChat()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Feature pills -->
+  <div class="c-feat">
+    <span class="cfbtn" onclick="qMsg('Book appointment')">📅 Book Appointment</span>
+    <span class="cfbtn" onclick="qMsg('Find a doctor')">👨‍⚕️ Find Doctor</span>
+    <span class="cfbtn" onclick="qMsg('Check my medicines')">💊 Medicines</span>
+  </div>
+
+  <!-- Message area -->
+  <div class="c-msgs" id="cMsgs">
+    <div class="cmsg">
+      <div class="cmav">🤖</div>
+      <div class="cmbub">
+        <p>Hi! I'm <strong>HealthBot+</strong>, your AI health companion! 👋</p>
+        <p>I can help you:</p>
+        <ul>
+          <li>📅 <strong>Book appointments</strong> with the right doctor</li>
+          <li>👨‍⚕️ <strong>Find specialists</strong> by symptoms or body part</li>
+          <li>💊 <strong>Track medicines</strong> and get reminders</li>
+          <li>🏥 <strong>Discover hospitals</strong> near you</li>
+        </ul>
+        <p>Try: <em>"I have knee pain"</em> or <em>"find a heart doctor"</em> 💙</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Doctor suggestion cards -->
+  <div class="dsug-strip" id="dsug" style="display:none"></div>
+
+  <!-- Quick buttons -->
+  <div class="cqbtns">
+    <button class="cqb" onclick="qMsg('I have chest pain')">❤️ Chest pain</button>
+    <button class="cqb" onclick="qMsg('Knee or joint pain')">🦴 Joint pain</button>
+    <button class="cqb" onclick="qMsg('Skin problem or rash')">🔬 Skin issue</button>
+    <button class="cqb" onclick="qMsg('Headache or migraine')">🧠 Headache</button>
+    <button class="cqb" onclick="qMsg('Book appointment')">📅 Book appt</button>
+  </div>
+
+  <!-- Input -->
+  <div class="c-inp-a">
+    <div class="c-row">
+      <textarea id="cInp" class="cinp" rows="1"
+        placeholder="Type your health query…"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px'"></textarea>
+      <button class="bsend" id="bsend" onclick="sendMsg()">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MODALS
+════════════════════════════════════════ -->
+<!-- Sign In -->
+<div class="moverlay" id="mLogin">
+  <div class="modal">
+    <div class="mhd">
+      <h3>Welcome back to Healthcare+</h3>
+      <button class="mclose" onclick="closeM('mLogin')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="mbody">
+      <div class="fg"><label>Email Address</label>
+        <input type="email" id="lEmail" class="fc" placeholder="your@email.com"/>
+      </div>
+      <div class="fg"><label>Password</label>
+        <input type="password" id="lPass" class="fc" placeholder="••••••••"/>
+      </div>
+      <button class="btn btn-p block" onclick="doLogin()">Sign In</button>
+      <p class="msw">Don't have an account?
+        <a onclick="swM('mLogin','mReg')">Sign up free</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Register -->
+<div class="moverlay" id="mReg">
+  <div class="modal">
+    <div class="mhd">
+      <h3>Join Healthcare+</h3>
+      <button class="mclose" onclick="closeM('mReg')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="mbody">
+      <div class="fg"><label>Full Name</label>
+        <input type="text" id="rName" class="fc" placeholder="Your full name"/>
+      </div>
+      <div class="fg"><label>Email Address</label>
+        <input type="email" id="rEmail" class="fc" placeholder="your@email.com"/>
+      </div>
+      <div class="fg"><label>Phone Number</label>
+        <input type="tel" id="rPhone" class="fc" placeholder="+91 XXXXX XXXXX"/>
+      </div>
+      <div class="fg"><label>Password</label>
+        <input type="password" id="rPass" class="fc" placeholder="Min. 8 characters"/>
+      </div>
+      <button class="btn btn-p block" onclick="doReg()">Create Account</button>
+      <p class="msw">Already have an account?
+        <a onclick="swM('mReg','mLogin')">Sign in</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Doctor detail -->
+<div class="moverlay" id="mDoc">
+  <div class="modal lg">
+    <div class="mhd">
+      <h3 id="mDocTitle">Doctor Profile</h3>
+      <button class="mclose" onclick="closeM('mDoc')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="mbody" id="mDocBody"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-con" id="toasts"></div>
+
+<!-- ═══════════════════════════════════════
+     FOOTER
+════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container ft-grid">
+    <div class="ft-brand">
+      <div class="brand">
+        <span class="brand-ico">🏥</span>
+        <span class="brand-tx">Healthcare<span class="brand-plus">+</span></span>
+      </div>
+      <p>Your complete health management companion. Trusted by thousands of patients across India.</p>
+    </div>
+    <div class="ft-links">
+      <div class="ft-col">
+        <h4>Platform</h4>
+        <a onclick="showSec('doctors')">Find Doctors</a>
+        <a onclick="showSec('hospitals')">Hospitals</a>
+        <a onclick="showSec('appointments')">Appointments</a>
+        <a onclick="showSec('records')">Health Records</a>
+        <a onclick="showSec('medicines')">Medicines</a>
+      </div>
+      <div class="ft-col">
+        <h4>Support</h4>
+        <a href="#">Help Center</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Use</a>
+        <a href="#">Contact Us</a>
+      </div>
+      <div class="ft-col">
+        <h4>Emergency</h4>
+        <div class="emer">🚑 Dial 108</div>
+        <div class="emer">☎️ 1800-111-555</div>
+      </div>
+    </div>
+  </div>
+  <div class="ft-btm">
+    <p>© 2025 Healthcare+ — Built with ❤️ for better health in India</p>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
