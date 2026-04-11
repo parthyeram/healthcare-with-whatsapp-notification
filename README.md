@@ -1,191 +1,186 @@
-<<<<<<< HEAD
-# 🏥 Healthcare+ — Complete Healthcare Management Platform
+Healthcare+ — Complete Health Companion with WhatsApp Medicine Reminders
+Overview
+Healthcare+ is a full-stack health management web application built with Node.js, Express, MySQL, and a vanilla JS single-page frontend. It covers doctor discovery, appointment booking, health records, medicine tracking, an AI chatbot, and — newly integrated — WhatsApp medicine reminders via Twilio.
 
-A full-stack healthcare management system with AI chatbot, doctor search, hospital tie-ups, health records, medicine tracking, and appointment booking.
+Features
 
----
-
-## 📁 Project Structure
-
-```
-healthcare-plus/
-│
-├── frontend/                   ← Static website (HTML + CSS + JS)
-│   ├── index.html              ← Single-page application (all 6 screens)
-│   ├── css/
-│   │   └── styles.css          ← Complete design system (~700 lines)
-│   └── js/
-│       └── main.js             ← All frontend logic + AI chatbot
-│
-└── backend/                    ← Node.js REST API
-    ├── server.js               ← Express entry point (port 3001)
-    ├── package.json
-    ├── .env.example            ← Copy to .env and fill in values
-    ├── db/
-    │   ├── connection.js       ← MySQL pool
-    │   └── schema.sql          ← 10 tables + 12 doctors + 5 hospitals seeded
-    └── routes/
-        ├── auth.js             ── Register / Login / Profile
-        ├── doctors.js          ── Doctor list, detail, AI suggest, reviews
-        ├── appointments.js     ── Book, slots, cancel
-        ├── records.js          ── Health records, medicines, hospitals
-        └── chatbot.js          ── Claude claude-sonnet-4-20250514 AI chatbot
-```
-
----
-
-## 🚀 Quick Start
-
-### Step 1 — Database
-
-```bash
-# Create schema and seed data
-mysql -u root -p < backend/db/schema.sql
-```
-
-### Step 2 — Backend
-
-```bash
-cd backend
-cp .env.example .env          # Edit DB credentials + Anthropic API key
-npm install
-npm run dev                   # Starts on http://localhost:3001
-```
-
-### Step 3 — Frontend
-
-```bash
-cd frontend
-# Option A — Open directly in browser (works for all features except API calls)
-open index.html
-
-# Option B — Serve with a local server
-npx serve .                   # http://localhost:3000
-# or
-python3 -m http.server 3000
-```
-
-> **Note:** The frontend works offline with built-in mock data even without the backend running.
-
-> **Connecting the layers:** Run the backend (`npm run dev` in `backend/`) so `/api` is available at `http://localhost:3001/api`, and serve the frontend from `frontend/` (`open index.html` or `npx serve`). The frontend�s `API` constant in `frontend/js/main.js` points to that route, so ensure `FRONTEND_URL` in `backend/.env` matches the frontend origin (`http://localhost:3000` by default) and the backend `PORT` aligns with the server port.
-
----
-
-## 🔑 Environment Variables (`backend/.env`)
-
-| Variable | Description |
-|---|---|
-| `PORT` | API server port (default 3001) |
-| `DB_HOST` | MySQL host |
-| `DB_USER` | MySQL username |
-| `DB_PASSWORD` | MySQL password |
-| `DB_NAME` | Database name (`healthcare_plus`) |
-| `JWT_SECRET` | Long random string for JWT signing |
-| `ANTHROPIC_API_KEY` | Get from [console.anthropic.com](https://console.anthropic.com) |
-| `UPLOAD_PATH` | File upload directory (`./uploads`) |
-| `FRONTEND_URL` | CORS origin (e.g. `http://localhost:3000`) |
-
----
-
-## 📡 API Reference
-
-### Auth
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/auth/register` | Create account |
-| POST | `/api/auth/login` | Sign in, returns JWT |
-| GET | `/api/auth/profile/:id` | Get user profile |
-| PUT | `/api/auth/profile/:id` | Update profile |
-
-### Doctors
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/doctors` | List with ?specialization &hospital &search &page |
-| GET | `/api/doctors/:id` | Doctor detail + reviews |
-| GET | `/api/doctors/meta/specializations` | All specializations |
-| GET | `/api/doctors/ai/suggest?query=knee` | AI specialist matching |
-| POST | `/api/doctors/:id/review` | Submit review |
-
-### Appointments
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/appointments/user/:userId` | User's appointments |
-| GET | `/api/appointments/slots/:doctorId?date=` | Available time slots |
-| POST | `/api/appointments` | Book appointment |
-| PUT | `/api/appointments/:id` | Update status |
-| DELETE | `/api/appointments/:id` | Cancel |
-
-### Health Records
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/health-records/user/:userId` | User's records |
-| POST | `/api/health-records` | Upload (multipart, supports images/PDF) |
-| DELETE | `/api/health-records/:id` | Delete record |
-
-### Medicines
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/medicines/user/:userId` | User's medicines |
-| POST | `/api/medicines` | Add medicine |
-| PUT | `/api/medicines/:id` | Update stock / status |
-| DELETE | `/api/medicines/:id` | Remove medicine |
-
-### Hospitals
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/hospitals` | All active partner hospitals |
-
-### AI Chatbot
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/chatbot/chat` | Send message, get AI reply + doctor suggestions |
-| GET | `/api/chatbot/history/:sessionId` | Chat history |
-
----
-
-## 🤖 AI Chatbot — How It Works
-
-The chatbot is powered by **Claude claude-sonnet-4-20250514** with a healthcare-specific system prompt that:
-
-- Receives **live doctor/hospital data** from MySQL on every request
-- Maps any **body part or symptom → correct specialist** automatically
-- Handles **booking flows** conversationally
-- Sends **emergency guidance** (calls 108) for critical symptoms
-- Keeps last **10 turns** of context per session
-- Falls back to **keyword matching** when API key is not set
-
-### Symptom → Specialist examples
-| User says | Suggested specialist |
-|---|---|
-| "I have knee pain" | **Orthopedic** 🦴 |
-| "heart problem" | **Cardiologist** ❤️ |
-| "blurry vision" | **Ophthalmologist** 👁️ |
-| "my child has fever" | **Pediatrician** 👶 |
-| "anxiety and stress" | **Psychiatrist** 🧘 |
-| "stomach ache" | **Gastroenterologist** 🍽️ |
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Frontend | HTML5, CSS3 (custom design system), Vanilla JS |
-| Backend | Node.js 18+, Express 4 |
-| Database | MySQL 8.0 |
-| AI | Anthropic Claude claude-sonnet-4-20250514 |
-| Auth | JWT + bcryptjs |
-| File Upload | Multer |
-| Fonts | Sora + DM Serif Display (Google Fonts) |
-| Icons | Font Awesome 6.5 |
-
----
-
-© 2025 Healthcare+ — Built with ❤️ for better health in India
+Authentication — Register, login, JWT-based sessions
+Find Doctors — Browse and filter doctors by specialty
+Hospitals — Nearby hospital listings
+Appointments — Book, view, and manage appointments
+Health Records — Upload and track medical documents
+Medicines — Add and monitor your medicine schedule
+AI Chatbot — Powered by Anthropic Claude for health queries
+WhatsApp Reminders — OTP-verified WhatsApp medicine reminders with scheduling, logs, and adherence stats (Twilio)
 
 
+Project Structure
+healthcareplus+/
+├── backend/
+│   ├── db/
+│   │   ├── connection.js            # MySQL connection pool
+│   │   ├── schema.sql               # Main database schema
+│   │   └── schema_reminders.sql     # WhatsApp reminders schema (run after schema.sql)
+│   ├── jobs/
+│   │   ├── whatsapp.js              # Twilio WhatsApp sender + message templates
+│   │   └── scheduler.js             # Cron jobs — reminders, weekly summary, low-stock alerts
+│   ├── routes/
+│   │   ├── auth.js                  # Register / login / JWT
+│   │   ├── doctors.js               # Doctor listings
+│   │   ├── appointments.js          # Appointment CRUD
+│   │   ├── records.js               # Health records + medicines + hospitals
+│   │   ├── chatbot.js               # Claude AI chatbot
+│   │   └── reminders.js             # WhatsApp reminder API (full CRUD + webhook)
+│   ├── .env.example                 # Environment variable template
+│   ├── package.json
+│   └── server.js                    # Express app entry point
+└── frontend/
+    ├── index.html                   # Single-page app (all sections)
+    ├── css/
+    │   └── styles.css               # All styles including WhatsApp reminder styles
+    └── js/
+        └── main.js                  # All frontend logic including reminder JS
+
+Tech Stack
+Backend — Node.js, Express, MySQL2, JWT, bcryptjs, Multer, Twilio, node-cron, moment-timezone, Anthropic SDK
+Frontend — Vanilla HTML/CSS/JS, Sora + DM Serif fonts, Font Awesome icons
+Database — MySQL
+
+Prerequisites
+
+Node.js v18 or higher
+MySQL 8+
+A Twilio account with WhatsApp enabled (sandbox or approved sender)
+An Anthropic API key (for the chatbot)
 
 
-=======
-# healthcare-with-whatsapp-notification
->>>>>>> 1ff79830f1146e7aba236500aaac712d5f63844a
+Installation
+1. Clone or extract the project
+bashcd healthcareplus+/backend
+2. Install dependencies
+bashnpm install
+3. Set up environment variables
+bashcp .env.example .env
+Open .env and fill in all values (see Environment Variables section below).
+4. Set up the database
+Create the database in MySQL:
+sqlCREATE DATABASE healthcare_plus;
+Run the main schema:
+bashmysql -u root -p healthcare_plus < db/schema.sql
+Run the WhatsApp reminders schema (must be run after schema.sql):
+bashmysql -u root -p healthcare_plus < db/schema_reminders.sql
+5. Start the server
+Development mode (with auto-restart):
+bashnpm run dev
+Production mode:
+bashnpm start
+The API runs at http://localhost:3001 by default.
+6. Open the frontend
+Open frontend/index.html in your browser directly, or serve it with any static file server. The frontend talks to the backend at http://localhost:3001.
+
+Environment Variables
+# Server
+PORT=3001
+
+# MySQL
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=healthcare_plus
+
+# JWT
+JWT_SECRET=a_long_random_secret_string
+JWT_EXPIRES_IN=7d
+
+# Anthropic (chatbot)
+ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxx
+
+# File uploads
+UPLOAD_PATH=./uploads
+MAX_FILE_SIZE=10485760
+
+# CORS
+FRONTEND_URL=http://localhost:3000
+
+# Twilio WhatsApp
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=your_twilio_auth_token
+TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
+
+# App settings
+APP_NAME=Healthcare+
+SUPPORT_NUMBER=1800-111-555
+TIMEZONE=Asia/Kolkata
+If TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN are not set, the server starts normally but the reminder scheduler is disabled — all other features continue to work.
+
+API Reference
+Auth
+MethodEndpointDescriptionPOST/api/auth/registerCreate new accountPOST/api/auth/loginLogin, returns JWT
+Reminders — WhatsApp
+MethodEndpointDescriptionPOST/api/reminders/whatsapp/registerSave phone number, send OTPPOST/api/reminders/whatsapp/verifyVerify OTP, send welcome messageGET/api/reminders/whatsapp/:userIdGet WhatsApp registration infoDELETE/api/reminders/whatsapp/:userIdOpt out
+Reminders — CRUD
+MethodEndpointDescriptionGET/api/reminders/:userIdList all reminders for a userPOST/api/remindersCreate a reminderPUT/api/reminders/:idUpdate a reminderDELETE/api/reminders/:idDelete a reminderPATCH/api/reminders/:id/toggleEnable or disable a reminder
+Reminders — Logs & Stats
+MethodEndpointDescriptionGET/api/reminders/logs/:userIdMessage history (paginated)GET/api/reminders/stats/:userIdAdherence stats by dayPOST/api/reminders/test/:userIdSend a test WhatsApp messagePOST/api/reminders/incomingTwilio webhook for inbound replies
+
+WhatsApp Setup (Twilio)
+Using the Twilio Sandbox (development)
+
+Go to console.twilio.com and navigate to Messaging → Try it out → Send a WhatsApp message
+Your users must send a join code (e.g. join bright-moon) to +1 415 523 8886 once to opt in to the sandbox
+Set TWILIO_WHATSAPP_FROM=whatsapp:+14155238886 in your .env
+
+Twilio Incoming Webhook
+Set your Twilio WhatsApp sandbox webhook URL to:
+https://your-domain.com/api/reminders/incoming
+This handles inbound replies from patients. Supported commands:
+CommandActionTAKENAcknowledges medicine was takenSKIPSkips today's doseLISTShows today's active medicinesSTOPUnsubscribes from all remindersSTARTRe-subscribes
+
+Scheduled Jobs
+The scheduler starts automatically when the server boots (if Twilio credentials are present).
+ScheduleJobEvery minuteCheck for due reminders and send WhatsApp messagesDaily at 9:00 PM ISTNightly low-stock alert for medicines with 5 or fewer tablets remainingEvery Sunday at 8:00 PM ISTWeekly adherence summary sent to all users
+The timezone is controlled by the TIMEZONE environment variable (default: Asia/Kolkata).
+
+Database Tables (WhatsApp Reminders)
+patient_whatsapp — stores phone number, verification status, OTP, and opt-in consent per user
+medicine_reminders — stores one reminder per medicine per user with time, days of week, and message template
+reminder_logs — records every message attempted, with Twilio SID, status (queued / sent / delivered / failed), and error details
+
+Message Templates
+Five templates are available when creating a reminder:
+
+default — Full reminder with dosage, frequency, timing, and reply instructions
+morning — Friendly good morning greeting with medicine name
+evening — Brief evening nudge
+low_stock — Alert when stock count drops to 5 or below
+weekly_summary — Sunday adherence report with percentage and emoji feedback
+
+
+Frontend Sections
+The frontend is a single HTML file with section-based navigation:
+
+Home — Hero, stats, feature overview
+Find Doctors — Doctor cards with specialty filter
+Hospitals — Hospital listings
+Appointments — Book and manage appointments
+Health Records — Document upload and history
+Medicines — Add and track medicines
+Reminders — WhatsApp setup (OTP flow), reminder scheduling, message history, and adherence stats
+
+
+Security Notes
+
+All passwords are hashed with bcryptjs
+JWT tokens expire after 7 days (configurable)
+OTPs expire after 10 minutes
+WhatsApp opt-in is explicit and users can unsubscribe at any time by replying STOP
+Environment variables are never committed — use .env.example as the template
+
+
+License
+MIT — free to use and modify for personal and commercial projects.
+
+Support
+For questions, open an issue or contact support@healthcareplus.in
+Emergency helpline: 108 | App support: 1800-111-555
