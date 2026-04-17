@@ -10,14 +10,71 @@ const router  = express.Router();
 const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
 const db      = require('../db/connection');
+const wa      = require('../jobs/whatsapp');
+
+function formatPhone(raw) {
+  if (!raw) return null;
+  const digits = String(raw).replace(/\D/g, '');
+  const local  = digits.startsWith('91') ? digits.slice(2) : digits;
+  if (local.length !== 10) return null;
+  return {
+    phone: local,
+    whatsapp_no: `whatsapp:+91${local}`,
+  };
+}
+
+async function syncWhatsAppUser(userId, phone) {
+  const normalized = formatPhone(phone);
+  if (!normalized) return null;
+
+  await db.query(
+    `INSERT INTO patient_whatsapp (user_id, phone, whatsapp_no, is_verified, otp_code, otp_expires, opted_in)
+     VALUES (?, ?, ?, 1, NULL, NULL, 1)
+     ON DUPLICATE KEY UPDATE
+       phone = VALUES(phone),
+       whatsapp_no = VALUES(whatsapp_no),
+       is_verified = 1,
+       otp_code = NULL,
+       otp_expires = NULL,
+       opted_in = 1`,
+    [userId, normalized.phone, normalized.whatsapp_no]
+  );
+
+  return normalized.whatsapp_no;
+}
+
+async function notifyOnAuth(type, userRecord) {
+  if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) return;
+
+  try {
+    const whatsappNo = await syncWhatsAppUser(userRecord.id, userRecord.phone);
+    if (!whatsappNo) return;
+
+    if (type === 'signup') {
+      await wa.sendSignupNotice(whatsappNo, userRecord.name || 'there');
+      return;
+    }
+
+    if (type === 'login') {
+      const at = new Date().toLocaleString('en-IN', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        timeZone: process.env.TIMEZONE || 'Asia/Kolkata',
+      });
+      await wa.sendLoginNotice(whatsappNo, userRecord.name || 'there', at);
+    }
+  } catch (err) {
+    console.warn(`[auth] WhatsApp ${type} notice skipped:`, err.message);
+  }
+}
 
 /* ── Register ───────────────────────────────────────── */
 router.post('/register', async (req, res) => {
   try {
     const { name, email, phone, password, date_of_birth, gender, blood_group } = req.body;
 
-    if (!name || !email || !password)
-      return res.status(400).json({ success: false, message: 'Name, email and password are required' });
+    if (!name || !email || !phone || !password)
+      return res.status(400).json({ success: false, message: 'Name, email, WhatsApp number and password are required' });
 
     const [existing] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
     if (existing.length)
@@ -41,6 +98,8 @@ router.post('/register', async (req, res) => {
       token,
       user: { id: result.insertId, name, email, phone }
     });
+
+    notifyOnAuth('signup', { id: result.insertId, name, phone });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -71,6 +130,8 @@ router.post('/login', async (req, res) => {
 
     const { password_hash, ...safeUser } = user;
     res.json({ success: true, message: 'Login successful', token, user: safeUser });
+
+    notifyOnAuth('login', safeUser);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

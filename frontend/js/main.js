@@ -16,6 +16,90 @@ let docPage      = 1;
 const PER_PAGE   = 9;
 const SID        = 'sid_' + Date.now();
 
+function currentUserId() {
+  return user?.id || 1;
+}
+
+const REMINDER_SLOT_COUNTS = {
+  'Once daily': 1,
+  'Twice daily': 2,
+  'Three times daily': 3,
+  'Every 4 hours': 6,
+  'Every 6 hours': 4,
+  'Every 8 hours': 3,
+  'As needed': 0,
+};
+
+const REMINDER_DEFAULT_TIMES = {
+  'Once daily': ['08:00'],
+  'Twice daily': ['08:00', '20:00'],
+  'Three times daily': ['08:00', '14:00', '20:00'],
+  'Every 4 hours': ['06:00', '10:00', '14:00', '18:00', '22:00', '02:00'],
+  'Every 6 hours': ['06:00', '12:00', '18:00', '00:00'],
+  'Every 8 hours': ['06:00', '14:00', '22:00'],
+  'As needed': [],
+};
+
+function getReminderSlotCount(frequency) {
+  return REMINDER_SLOT_COUNTS[frequency] ?? 1;
+}
+
+function getDefaultReminderTimes(frequency) {
+  return [...(REMINDER_DEFAULT_TIMES[frequency] || ['08:00'])];
+}
+
+function normalizeReminderTime(value) {
+  return /^\d{2}:\d{2}$/.test(value || '') ? value : '08:00';
+}
+
+function normalizeReminderTimes(values, frequency) {
+  const count = getReminderSlotCount(frequency);
+  if (!count) return [];
+  const defaults = getDefaultReminderTimes(frequency);
+  const incoming = Array.isArray(values) ? values : [];
+  return Array.from({ length: count }, (_, idx) => normalizeReminderTime(incoming[idx] || defaults[idx] || '08:00'));
+}
+
+function formatReminderTime(value) {
+  const safe = normalizeReminderTime(value);
+  const [hour, minute] = safe.split(':').map(Number);
+  const dt = new Date();
+  dt.setHours(hour, minute, 0, 0);
+  return dt.toLocaleTimeString('en-IN', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Kolkata',
+  });
+}
+
+function formatReminderSummary(times) {
+  if (!times?.length) return 'No fixed reminder';
+  return times.map(t => `${formatReminderTime(t)} IST`).join(', ');
+}
+
+function mergeReminderData(medList, reminderList) {
+  const reminderMap = new Map();
+  reminderList.forEach(r => {
+    if (!reminderMap.has(r.medicine_id)) reminderMap.set(r.medicine_id, []);
+    reminderMap.get(r.medicine_id).push(r);
+  });
+  return medList.map(m => {
+    const reminderRows = (reminderMap.get(m.id) || [])
+      .map(r => ({ ...r, reminder_time: String(r.reminder_time || '').slice(0, 5) }))
+      .sort((a, b) => a.reminder_time.localeCompare(b.reminder_time));
+    const reminderTimes = reminderRows.length
+      ? reminderRows.map(r => r.reminder_time)
+      : normalizeReminderTimes([], m.frequency);
+    return {
+      ...m,
+      reminder_rows: reminderRows,
+      reminder_times: reminderTimes,
+      reminder_time: reminderTimes[0] || null,
+    };
+  }).sort((a, b) => (b.id || 0) - (a.id || 0));
+}
+
 function renderAuthState() {
   const authEl = document.getElementById('navAuth');
   const userEl = document.getElementById('navUser');
@@ -95,6 +179,7 @@ function showSec(id) {
   if (id === 'doctors')      renderDocs();
   if (id === 'hospitals')    renderHosps();
   if (id === 'appointments') loadAppts();
+  if (id === 'medicines')    loadMeds();
 }
 
 window.addEventListener('scroll', () =>
@@ -104,6 +189,7 @@ window.addEventListener('scroll', () =>
 /* Set minimum date for appointment picker */
 document.addEventListener('DOMContentLoaded', () => {
   renderAuthState();
+  renderAddReminderInputs();
   const dateEl = document.getElementById('apptDate');
   if (dateEl) dateEl.min = new Date().toISOString().split('T')[0];
 
@@ -134,6 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
   );
 
   renderDocs();
+  loadMeds();
   setTimeout(() => toast('👋 Welcome to Healthcare+! Try the 🤖 chatbot for AI-powered help.', 'in'), 1200);
 });
 
@@ -508,31 +595,152 @@ function viewImg(src) {
 /* ═══════════════════════════════════════════════════════
    MEDICINES
 ═══════════════════════════════════════════════════════ */
-function addMed() {
+async function loadMeds() {
+  try {
+    const userId = currentUserId();
+    const [medRes, remRes] = await Promise.all([
+      fetch(`${API}/medicines/user/${userId}`),
+      fetch(`${API}/reminders/${userId}`),
+    ]);
+    const medData = await medRes.json();
+    const remData = await remRes.json();
+    if (medData.success) {
+      medicines = mergeReminderData(medData.data || [], remData.success ? remData.data || [] : []);
+      renderMeds();
+      renderSched();
+    }
+  } catch (_) {
+    renderMeds();
+    renderSched();
+  }
+}
+
+function renderTimeInputs(containerId, frequency, values = [], inputPrefix = 'mReminder') {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const times = normalizeReminderTimes(values, frequency);
+  if (!times.length) {
+    container.innerHTML = '<div class="rem-empty">As needed medicines do not require fixed daily reminder slots.</div>';
+    return;
+  }
+
+  container.innerHTML = times.map((time, idx) => `
+    <div class="rem-slot">
+      <label for="${inputPrefix}-${idx}">Time ${idx + 1}</label>
+      <input type="time" id="${inputPrefix}-${idx}" class="fc" value="${time}"/>
+    </div>
+  `).join('');
+}
+
+function renderAddReminderInputs() {
+  const frequency = document.getElementById('mFreq')?.value || 'Once daily';
+  renderTimeInputs('mReminderInputs', frequency, [], 'mReminder');
+}
+
+function readTimeInputs(prefix, frequency) {
+  const count = getReminderSlotCount(frequency);
+  return Array.from({ length: count }, (_, idx) => {
+    const input = document.getElementById(`${prefix}-${idx}`);
+    return normalizeReminderTime(input?.value);
+  });
+}
+
+async function syncReminderSlots(medicineId, times, existingRows = []) {
+  const currentRows = [...existingRows].sort((a, b) => a.reminder_time.localeCompare(b.reminder_time));
+
+  for (let idx = 0; idx < times.length; idx++) {
+    if (currentRows[idx]) {
+      const res = await fetch(`${API}/reminders/${currentRows[idx].id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reminder_time: times[idx],
+          days_of_week: 'all',
+          message_tpl: 'default',
+          is_active: 1,
+        })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Could not update reminder');
+    } else {
+      const res = await fetch(`${API}/reminders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          medicine_id: medicineId,
+          user_id: currentUserId(),
+          reminder_time: times[idx],
+        })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Could not create reminder');
+    }
+  }
+
+  for (let idx = times.length; idx < currentRows.length; idx++) {
+    await fetch(`${API}/reminders/${currentRows[idx].id}`, { method: 'DELETE' });
+  }
+}
+
+async function addMed() {
   const nm = document.getElementById('mName').value.trim();
   if (!nm) return toast('Please enter medicine name', 'er');
+  const frequency = document.getElementById('mFreq').value;
+  const reminderTimes = readTimeInputs('mReminder', frequency);
 
-  medicines.unshift({
-    id: Date.now(), name: nm, status: 'active',
-    dosage:       document.getElementById('mDose').value,
-    frequency:    document.getElementById('mFreq').value,
-    timing:       document.getElementById('mTiming').value,
-    start_date:   document.getElementById('mStart').value,
-    end_date:     document.getElementById('mEnd').value,
-    prescribed_by:document.getElementById('mDr').value,
-    stock_count:  parseInt(document.getElementById('mStock').value) || 0,
-    notes:        document.getElementById('mNotes').value,
-  });
+  const newMed = {
+    name: nm,
+    dosage: document.getElementById('mDose').value,
+    frequency,
+    timing: document.getElementById('mTiming').value,
+    start_date: document.getElementById('mStart').value,
+    end_date: document.getElementById('mEnd').value,
+    prescribed_by: document.getElementById('mDr').value,
+    stock_count: parseInt(document.getElementById('mStock').value) || 0,
+    notes: document.getElementById('mNotes').value,
+    reminder_times: reminderTimes,
+    reminder_time: reminderTimes[0] || null,
+    status: 'active',
+    reminder_rows: reminderTimes.map((time, idx) => ({ id: `tmp-${idx}`, reminder_time: time })),
+  };
 
-  renderMeds(); renderSched();
+  const fallbackMed = { ...newMed, id: Date.now() };
+  medicines.unshift(fallbackMed);
+  renderMeds();
+  renderSched();
+
+  try {
+    const medRes = await fetch(`${API}/medicines`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: currentUserId(),
+        name: newMed.name,
+        dosage: newMed.dosage,
+        frequency: newMed.frequency,
+        timing: newMed.timing,
+        start_date: newMed.start_date,
+        end_date: newMed.end_date,
+        prescribed_by: newMed.prescribed_by,
+        notes: newMed.notes,
+        stock_count: newMed.stock_count,
+      })
+    });
+    const medData = await medRes.json();
+    if (!medData.success) throw new Error(medData.message || 'Could not save medicine');
+
+    await syncReminderSlots(medData.id, reminderTimes, []);
+
+    await loadMeds();
+    toast(`Medicine saved. Reminder set for ${formatReminderSummary(reminderTimes)}`, 'ok');
+  } catch (err) {
+    toast(err.message || 'Medicine saved locally, but reminder setup failed', 'er');
+  }
+
   ['mName','mDose','mStart','mEnd','mDr','mNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('mStock').value = '';
-
-  /* Try to persist */
-  fetch(`${API}/medicines`, { method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ user_id:1, name:nm, dosage:medicines[0].dosage, frequency:medicines[0].frequency }) }).catch(() => {});
-
-  toast('💊 Medicine added to tracker!', 'ok');
+  document.getElementById('mFreq').value = 'Once daily';
+  renderAddReminderInputs();
 }
 
 function filtMeds(s, btn) {
@@ -558,6 +766,11 @@ function renderMeds(filt = 'active') {
         <div class="mfr">🔄 ${m.frequency} • ${m.timing}</div>
         ${m.prescribed_by ? `<div class="mdr">👨‍⚕️ ${m.prescribed_by}</div>` : ''}
         ${m.start_date    ? `<div class="mdr">📅 ${fmtDate(m.start_date)}${m.end_date ? ' – ' + fmtDate(m.end_date) : ''}</div>` : ''}
+        <div class="mdr">⏰ Reminder: ${formatReminderSummary(m.reminder_times)}</div>
+        <div class="mrem">
+          <div class="mrem-grid" id="reminder-wrap-${m.id}"></div>
+          ${m.frequency === 'As needed' ? '' : `<button onclick="saveReminderTime(${m.id})">Save Times</button>`}
+        </div>
         <div class="stock-b">
           <div class="stlbl">Stock: ${m.stock_count} tablets ${low ? '⚠️ Low stock!' : ''}</div>
           <div class="sttrack"><div class="stfill${low ? ' low' : ''}" style="width:${pct}%"></div></div>
@@ -570,6 +783,8 @@ function renderMeds(filt = 'active') {
       </div>
     </div>`;
   }).join('');
+
+  list.forEach(m => renderTimeInputs(`reminder-wrap-${m.id}`, m.frequency, m.reminder_times, `reminder-${m.id}`));
 }
 
 function renderSched() {
@@ -577,20 +792,18 @@ function renderSched() {
   const active = medicines.filter(m => m.status === 'active');
   if (!active.length) { el.innerHTML = '<p style="font-size:.74rem;color:var(--gray);text-align:center">No active medicines</p>'; return; }
 
-  const tmap = {
-    'Once daily':       ['08:00'],
-    'Twice daily':      ['08:00', '20:00'],
-    'Three times daily':['08:00', '14:00', '20:00'],
-    'Every 4 hours':    ['08:00', '12:00', '16:00', '20:00'],
-    'Every 6 hours':    ['06:00', '12:00', '18:00'],
-    'Every 8 hours':    ['08:00', '16:00', '00:00'],
-  };
   const rows = [];
   active.forEach(m => {
-    (tmap[m.frequency] || ['08:00']).forEach(t =>
-      rows.push({ t, name: m.name, dose: m.dosage, timing: m.timing })
-    );
+    (m.reminder_times || []).forEach(time => {
+      rows.push({
+        t: normalizeReminderTime(time),
+        name: m.name,
+        dose: m.dosage,
+        timing: m.timing,
+      });
+    });
   });
+  if (!rows.length) { el.innerHTML = '<p style="font-size:.74rem;color:var(--gray);text-align:center">No fixed medicine schedule for today</p>'; return; }
   rows.sort((a, b) => a.t.localeCompare(b.t));
   el.innerHTML = rows.map(r => `
     <div class="sched-item">
@@ -599,18 +812,36 @@ function renderSched() {
     </div>`).join('');
 }
 
+async function saveReminderTime(medId) {
+  const med = medicines.find(x => x.id === medId);
+  if (!med) return;
+  const reminderTimes = readTimeInputs(`reminder-${medId}`, med.frequency);
+
+  try {
+    await syncReminderSlots(med.id, reminderTimes, med.reminder_rows || []);
+    med.reminder_times = reminderTimes;
+    med.reminder_time = reminderTimes[0] || null;
+    await loadMeds();
+    toast(`Reminder updated to ${formatReminderSummary(reminderTimes)}`, 'ok');
+  } catch (err) {
+    toast(err.message || 'Could not update reminder time', 'er');
+  }
+}
+
 async function sendWhatsAppTest() {
   const btn = document.getElementById('waTestBtn');
   if (!btn || btn.disabled) return;
+  const med = medicines.find(m => m.status === 'active');
+  if (!med) return toast('Add an active medicine first', 'er');
   const original = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
   const payload = {
-    medicine_name: 'Healthcare+ test reminder',
-    dosage: '1 tablet',
-    frequency: 'Once daily',
-    timing: 'After meals'
+    medicine_name: med.name,
+    dosage: med.dosage || '1 dose',
+    frequency: med.frequency || 'Once daily',
+    timing: med.timing || `At ${formatReminderTime(med.reminder_time)}`
   };
 
   try {
@@ -792,7 +1023,7 @@ function doReg() {
   const email = document.getElementById('rEmail').value;
   const phone = document.getElementById('rPhone').value;
   const pass  = document.getElementById('rPass').value;
-  if (!name || !email || !pass) return toast('Fill all fields', 'er');
+  if (!name || !email || !phone || !pass) return toast('Fill all fields including WhatsApp number', 'er');
 
   fetch(`${API}/auth/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, email, phone, password:pass }) })
     .then(r => r.json())

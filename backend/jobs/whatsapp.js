@@ -106,6 +106,27 @@ ${stats.taken / stats.total >= 0.8 ? '🌟 Great job! Keep it up!' : '💪 Try t
 
 _${APP} — Your Health Companion_
 `.trim(),
+
+  signup_notice: (name) => `
+👋 *Welcome to ${APP}*
+
+Hi ${name}! Your account has been created successfully.
+
+You will now receive important health alerts and medicine updates on this WhatsApp number.
+
+_${APP} Team_
+`.trim(),
+
+  login_notice: (name, at) => `
+🔐 *${APP} Login Alert*
+
+Hi ${name}, your account was just signed in successfully.
+Time: ${at}
+
+If this was not you, please change your password immediately.
+
+_${APP} Team_
+`.trim(),
 };
 
 /* ── Send a single WhatsApp message ──────────────────── */
@@ -146,6 +167,14 @@ async function sendWeeklySummary(phone, name, stats) {
   return sendWhatsApp(phone, TEMPLATES.weekly_summary(name, stats));
 }
 
+async function sendSignupNotice(phone, name) {
+  return sendWhatsApp(phone, TEMPLATES.signup_notice(name));
+}
+
+async function sendLoginNotice(phone, name, at) {
+  return sendWhatsApp(phone, TEMPLATES.login_notice(name, at));
+}
+
 module.exports = {
   sendWhatsApp,
   sendMedicineReminder,
@@ -153,5 +182,7 @@ module.exports = {
   sendWelcome,
   sendLowStockAlert,
   sendWeeklySummary,
+  sendSignupNotice,
+  sendLoginNotice,
   TEMPLATES,
 };

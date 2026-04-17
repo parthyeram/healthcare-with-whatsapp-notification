@@ -35,6 +35,33 @@ function formatPhone(raw) {
   return { phone: local, whatsapp_no: `whatsapp:+91${local}` };
 }
 
+async function ensureWhatsAppForUser(userId, phoneOverride = null) {
+  let rawPhone = phoneOverride;
+
+  if (!rawPhone) {
+    const [[user]] = await db.query('SELECT phone FROM users WHERE id = ?', [userId]);
+    rawPhone = user?.phone || null;
+  }
+
+  if (!rawPhone) return null;
+
+  const normalized = formatPhone(rawPhone);
+  await db.query(
+    `INSERT INTO patient_whatsapp (user_id, phone, whatsapp_no, is_verified, otp_code, otp_expires, opted_in)
+     VALUES (?, ?, ?, 1, NULL, NULL, 1)
+     ON DUPLICATE KEY UPDATE
+       phone = VALUES(phone),
+       whatsapp_no = VALUES(whatsapp_no),
+       is_verified = 1,
+       otp_code = NULL,
+       otp_expires = NULL,
+       opted_in = 1`,
+    [userId, normalized.phone, normalized.whatsapp_no]
+  );
+
+  return normalized;
+}
+
 /* ════════════════════════════════════════════════════════
    WHATSAPP REGISTRATION & VERIFICATION
 ════════════════════════════════════════════════════════ */
@@ -164,14 +191,11 @@ router.post('/', async (req, res) => {
     if (!/^\d{2}:\d{2}$/.test(reminder_time))
       return res.status(400).json({ success: false, message: 'reminder_time must be HH:MM format' });
 
-    const [wa_rows] = await db.query(
-      'SELECT id FROM patient_whatsapp WHERE user_id = ? AND is_verified = 1 AND opted_in = 1',
-      [user_id]
-    );
-    if (!wa_rows.length)
+    const linkedWhatsApp = await ensureWhatsAppForUser(user_id);
+    if (!linkedWhatsApp)
       return res.status(400).json({
         success: false,
-        message: 'Please verify your WhatsApp number first before creating reminders'
+        message: 'Please add a valid WhatsApp number during signup or profile before creating reminders'
       });
 
     const [result] = await db.query(
@@ -238,12 +262,9 @@ router.delete('/:id', async (req, res) => {
 // Send test WhatsApp message
 router.post('/test/:userId', async (req, res) => {
   try {
-    const [[waRec]] = await db.query(
-      'SELECT whatsapp_no FROM patient_whatsapp WHERE user_id = ? AND is_verified = 1',
-      [req.params.userId]
-    );
-    if (!waRec)
-      return res.status(404).json({ success: false, message: 'No verified WhatsApp found for this user' });
+    const linkedWhatsApp = await ensureWhatsAppForUser(req.params.userId);
+    if (!linkedWhatsApp)
+      return res.status(404).json({ success: false, message: 'No WhatsApp number found for this user' });
 
     const testMed = {
       name:      req.body.medicine_name || 'Test Medicine',
@@ -253,7 +274,7 @@ router.post('/test/:userId', async (req, res) => {
       notes:     'This is a test reminder from Healthcare+',
     };
 
-    const result = await wa.sendMedicineReminder(waRec.whatsapp_no, testMed, 'default');
+    const result = await wa.sendMedicineReminder(linkedWhatsApp.whatsapp_no, testMed, 'default');
     res.json({ success: true, message: 'Test message sent!', sid: result.sid });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

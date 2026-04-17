@@ -277,6 +277,15 @@ textarea.fc{resize:vertical;min-height:76px}
 .mdos{font-size:.74rem;color:var(--blue);font-weight:600}
 .mfr{font-size:.7rem;color:var(--gray);margin-top:2px}
 .mdr{font-size:.68rem;color:var(--gray);margin-top:2px}
+.rem-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.rem-slot{display:flex;flex-direction:column;gap:6px}
+.rem-slot label{font-size:.72rem;font-weight:600;color:var(--slate-700)}
+.rem-empty{font-size:.76rem;color:var(--gray);padding:10px 12px;background:var(--bg);border:1px dashed var(--border);border-radius:10px}
+.mrem{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.mrem-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;width:100%}
+.mrem input{max-width:130px;padding:7px 10px;font-size:.75rem}
+.mrem button{background:var(--blue-l);color:var(--blue);border:1px solid #BAE6FD;border-radius:6px;padding:6px 10px;font-size:.7rem;cursor:pointer;font-family:var(--font);font-weight:600}
+.mrem button:hover{background:var(--blue);color:#fff}
 .stock-b{margin-top:8px}
 .stlbl{font-size:.68rem;color:var(--gray);margin-bottom:2px}
 .sttrack{background:var(--border);height:4px;border-radius:2px;overflow:hidden}

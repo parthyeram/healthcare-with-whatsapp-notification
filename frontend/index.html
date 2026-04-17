@@ -439,7 +439,7 @@
         </div>
         <div class="fr2">
           <div class="fg"><label>Frequency</label>
-            <select id="mFreq" class="fc">
+            <select id="mFreq" class="fc" onchange="renderAddReminderInputs()">
               <option>Once daily</option><option>Twice daily</option>
               <option>Three times daily</option><option>Every 4 hours</option>
               <option>Every 6 hours</option><option>Every 8 hours</option>
@@ -470,6 +470,9 @@
             <input type="number" id="mStock" class="fc" placeholder="0" min="0"/>
           </div>
         </div>
+        <div class="fg"><label>Reminder Slots (IST)</label>
+          <div id="mReminderInputs" class="rem-grid"></div>
+        </div>
         <div class="fg"><label>Notes</label>
           <textarea id="mNotes" class="fc" rows="2" placeholder="Special instructions…"></textarea>
         </div>
@@ -492,7 +495,7 @@
             </div>
           </div>
           <button class="btn btn-o" id="waTestBtn" onclick="sendWhatsAppTest()" style="height:38px;align-self:flex-start;font-size:.75rem">
-            <i class="fas fa-phone"></i> Send WhatsApp reminder
+            <i class="fas fa-phone"></i> Send Reminder Now
           </button>
         </div>
 
@@ -630,7 +633,7 @@
       <div class="fg"><label>Email Address</label>
         <input type="email" id="rEmail" class="fc" placeholder="your@email.com"/>
       </div>
-      <div class="fg"><label>Phone Number</label>
+      <div class="fg"><label>WhatsApp Number</label>
         <input type="tel" id="rPhone" class="fc" placeholder="+91 XXXXX XXXXX"/>
       </div>
       <div class="fg"><label>Password</label>
