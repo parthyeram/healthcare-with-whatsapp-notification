@@ -42,6 +42,73 @@ const FOOD_GUIDANCE = {
   },
 };
 
+const COMMON_CONDITION_GUIDANCE = [
+  {
+    pattern: /stomach ache|stomach pain|abdominal pain|tummy pain|gas pain|stomach cramp/,
+    specialist: 'Gastroenterologist',
+    doctorFallback: 'General Physician',
+    reply: 'For a mild stomach ache, try light meals, enough water, rest, and avoid oily or very spicy food for now. Please see a doctor today if the pain is severe, stays on one side, comes with vomiting, fever, blood in stool, swelling, or keeps getting worse.',
+  },
+  {
+    pattern: /headache|migraine|head pain/,
+    specialist: 'Neurologist',
+    doctorFallback: 'General Physician',
+    reply: 'For a mild headache, try rest, water, regular meals, and less screen time for some time. Please see a doctor today if it is the worst headache you have had, follows a head injury, comes with repeated vomiting, fainting, weakness, blurred vision, or fever with neck stiffness.',
+  },
+  {
+    pattern: /fever|temperature|body heat/,
+    specialist: 'General Physician',
+    reply: 'For a mild fever, rest well, drink plenty of fluids, eat light meals, and monitor your temperature. Please see a doctor today if fever is very high, lasts more than 2 to 3 days, or comes with breathing trouble, confusion, dehydration, severe weakness, or a rash.',
+  },
+  {
+    pattern: /cough|dry cough|wet cough/,
+    specialist: 'Pulmonologist',
+    doctorFallback: 'General Physician',
+    reply: 'For a mild cough, try warm fluids, steam inhalation, rest, and avoid smoking or dusty air. Please see a doctor today if you have breathing trouble, chest pain, blood in cough, wheezing, or the cough lasts more than 1 to 2 weeks.',
+  },
+  {
+    pattern: /diarrhea|loose motion|loose motions|loose stool|motions/,
+    specialist: 'Gastroenterologist',
+    doctorFallback: 'General Physician',
+    reply: 'For loose motions, focus on plenty of fluids, ORS if available, light foods like rice or banana, and rest. Please see a doctor today if there is blood in stool, severe weakness, vomiting, dehydration, high fever, or symptoms keep continuing.',
+  },
+  {
+    pattern: /constipation|hard stool|not passing stool/,
+    specialist: 'Gastroenterologist',
+    doctorFallback: 'General Physician',
+    reply: 'For constipation, drink more water, add fruits and fiber, stay active, and do not delay going to the toilet. Please see a doctor if it keeps happening, causes strong pain, vomiting, blood in stool, or marked bloating.',
+  },
+  {
+    pattern: /vomiting|vomit|nausea/,
+    specialist: 'Gastroenterologist',
+    doctorFallback: 'General Physician',
+    reply: 'For mild vomiting or nausea, take small sips of water or ORS, rest, and restart food slowly with bland meals. Please see a doctor today if you cannot keep fluids down, have blood in vomit, strong abdominal pain, dehydration, or repeated vomiting.',
+  },
+  {
+    pattern: /back pain|lower back pain|upper back pain/,
+    specialist: 'Orthopedic',
+    doctorFallback: 'General Physician',
+    reply: 'For mild back pain, try rest from heavy lifting, gentle stretching, good posture, and a warm compress. Please see a doctor today if pain follows injury, causes leg weakness, numbness, loss of bladder or bowel control, or becomes severe.',
+  },
+  {
+    pattern: /rash|skin allergy|itching|red spots|hives/,
+    specialist: 'Dermatologist',
+    doctorFallback: 'General Physician',
+    reply: 'For a mild rash, keep the area clean and dry, avoid scratching, and avoid any new product that may have triggered it. Please see a doctor today if the rash is spreading fast, comes with swelling of lips or breathing trouble, fever, pus, or severe pain.',
+  },
+  {
+    pattern: /urine infection|uti|burning urine|burning urination|pain while urinating/,
+    specialist: 'Urologist',
+    doctorFallback: 'General Physician',
+    reply: 'For possible urine infection symptoms, drink enough water and avoid holding urine for long. Please see a doctor today if you have fever, back pain, blood in urine, pregnancy, or symptoms are not improving.',
+  },
+];
+
+function pickDoctorsBySpecializations(docs, names) {
+  const lowered = names.map(name => name.toLowerCase());
+  return docs.filter(d => lowered.some(name => (d.specialization || '').toLowerCase().includes(name))).slice(0, 3);
+}
+
 function findSuggestedDoctors(message, docs) {
   const ml = message.toLowerCase();
   for (const [kw, spec] of Object.entries(BODY_SPEC_MAP)) {
@@ -96,6 +163,18 @@ function buildFallbackReply(message, docs) {
     };
   }
 
+  for (const condition of COMMON_CONDITION_GUIDANCE) {
+    if (condition.pattern.test(ml)) {
+      const doctorList = suggestedDoctors.length
+        ? suggestedDoctors
+        : pickDoctorsBySpecializations(docs, [condition.specialist, condition.doctorFallback].filter(Boolean));
+      return {
+        reply: `${condition.reply}${buildDoctorSuggestionText(doctorList)}`,
+        suggested_doctors: doctorList,
+      };
+    }
+  }
+
   if (/mild|minor|home|doctor.*today|need.*doctor/.test(ml)) {
     return {
       reply: 'If symptoms are mild and improving, home care may be enough for now. If they are getting worse, last more than 2 to 3 days, or include high fever, breathing trouble, chest pain, dehydration, or severe weakness, please see a doctor today.',
@@ -132,7 +211,7 @@ Your jobs:
 1. Explain how to use the app step by step.
 2. Answer FAQ questions like booking, canceling appointments, and finding records.
 3. Give simple food advice for common issues like acidity.
-4. Give basic home-care advice for common symptoms like cold, mild fever, or cough.
+4. Give basic home-care advice for common symptoms like cold, mild fever, cough, headache, stomach ache, vomiting, diarrhea, constipation, rash, back pain, or burning urine.
 5. Tell the user whether home care is reasonable or whether they should see a doctor today.
 6. Suggest the correct specialist and available doctors when needed.
 

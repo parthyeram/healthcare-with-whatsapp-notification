@@ -896,10 +896,12 @@ async function sendMsg() {
     });
     const data = await res.json();
     removeTyping();
-    const reply = data.success ? data.message : 'I had trouble processing that. Please try again!';
+    const offline = !data.success ? fallback(msg) : null;
+    const reply = data.success ? data.message : offline.msg;
     addBubble('a', reply);
     chatHist.push({ role: 'assistant', content: reply });
-    if (data.suggested_doctors?.length) showDocSug(data.suggested_doctors);
+    if (data.success && data.suggested_doctors?.length) showDocSug(data.suggested_doctors);
+    else if (offline?.docs) showDocSug(offline.docs);
     else document.getElementById('dsug').style.display = 'none';
   } catch {
     removeTyping();
@@ -917,6 +919,113 @@ async function sendMsg() {
 /* Keyword-based fallback when API is unavailable */
 function fallback(msg) {
   const m = msg.toLowerCase();
+  const docsBySpecs = (...specs) =>
+    DOCTORS.filter(d => specs.some(spec => d.spec.toLowerCase().includes(spec.toLowerCase()))).slice(0, 3);
+  const commonConditions = [
+    {
+      pattern: /stomach ache|stomach pain|abdominal pain|tummy pain|gas pain|stomach cramp/,
+      msg: `For a mild stomach ache, try <strong>light meals, enough water, and rest</strong>. Avoid <strong>oily or very spicy food</strong> for now.\n\nPlease see a doctor today if the pain is severe, stays on one side, comes with vomiting, fever, blood in stool, swelling, or keeps getting worse.`,
+      docs: docsBySpecs('gastro', 'general physician')
+    },
+    {
+      pattern: /headache|migraine|head pain/,
+      msg: `For a mild headache, try <strong>rest, good hydration, regular meals, and less screen time</strong> for some time.\n\nPlease see a doctor today if it is the worst headache you have had, follows a head injury, comes with repeated vomiting, fainting, weakness, blurred vision, or fever with neck stiffness.`,
+      docs: docsBySpecs('neuro', 'general physician')
+    },
+    {
+      pattern: /fever|temperature|body heat/,
+      msg: `For a mild fever, try <strong>rest, plenty of fluids, and light meals</strong> while monitoring your temperature.\n\nPlease see a doctor today if fever is very high, lasts more than 2 to 3 days, or comes with breathing trouble, confusion, dehydration, severe weakness, or a rash.`,
+      docs: docsBySpecs('general physician')
+    },
+    {
+      pattern: /cough|dry cough|wet cough/,
+      msg: `For a mild cough, try <strong>warm fluids, steam inhalation, rest, and avoiding smoking or dusty air</strong>.\n\nPlease see a doctor today if you have breathing trouble, chest pain, blood in cough, wheezing, or the cough lasts more than 1 to 2 weeks.`,
+      docs: docsBySpecs('pulmonologist', 'general physician')
+    },
+    {
+      pattern: /diarrhea|loose motion|loose motions|loose stool|motions/,
+      msg: `For loose motions, focus on <strong>plenty of fluids, ORS if available, light foods like rice or banana, and rest</strong>.\n\nPlease see a doctor today if there is blood in stool, severe weakness, vomiting, dehydration, high fever, or symptoms keep continuing.`,
+      docs: docsBySpecs('gastro', 'general physician')
+    },
+    {
+      pattern: /constipation|hard stool|not passing stool/,
+      msg: `For constipation, try <strong>more water, fruits and fiber, daily movement, and not delaying toilet time</strong>.\n\nPlease see a doctor if it keeps happening, causes strong pain, vomiting, blood in stool, or marked bloating.`,
+      docs: docsBySpecs('gastro', 'general physician')
+    },
+    {
+      pattern: /vomiting|vomit|nausea/,
+      msg: `For mild vomiting or nausea, take <strong>small sips of water or ORS, rest, and bland meals</strong>.\n\nPlease see a doctor today if you cannot keep fluids down, have blood in vomit, strong abdominal pain, dehydration, or repeated vomiting.`,
+      docs: docsBySpecs('gastro', 'general physician')
+    },
+    {
+      pattern: /back pain|lower back pain|upper back pain/,
+      msg: `For mild back pain, try <strong>avoiding heavy lifting, gentle stretching, good posture, and a warm compress</strong>.\n\nPlease see a doctor today if pain follows injury, causes leg weakness, numbness, loss of bladder or bowel control, or becomes severe.`,
+      docs: docsBySpecs('ortho', 'general physician')
+    },
+    {
+      pattern: /rash|skin allergy|itching|red spots|hives/,
+      msg: `For a mild rash, keep the area <strong>clean and dry</strong>, avoid scratching, and stop any new product that may have triggered it.\n\nPlease see a doctor today if the rash is spreading fast, comes with swelling of lips or breathing trouble, fever, pus, or severe pain.`,
+      docs: docsBySpecs('derma', 'general physician')
+    },
+    {
+      pattern: /urine infection|uti|burning urine|burning urination|pain while urinating/,
+      msg: `For possible urine infection symptoms, <strong>drink enough water and avoid holding urine for long</strong>.\n\nPlease see a doctor today if you have fever, back pain, blood in urine, pregnancy, or symptoms are not improving.`,
+      docs: docsBySpecs('urologist', 'general physician')
+    }
+  ];
+
+  if (/how.*book|book.*appointment|appointment.*book/.test(m)) {
+    return {
+      msg: `To book an appointment:\n1. Open <strong>Appointments</strong>.\n2. Select a doctor.\n3. Choose the date.\n4. Pick an available time slot.\n5. Click <strong>Confirm Appointment</strong>.\n\nIf you tell me your symptom, I can suggest the right doctor first.`,
+      docs: null
+    };
+  }
+
+  if (/cancel.*appointment|appointment.*cancel/.test(m)) {
+    return {
+      msg: `To cancel an appointment, open the <strong>Appointments</strong> section, find your booking in <strong>My Appointments</strong>, and use the cancel/remove option if it is still active.\n\nIf you do not see it, check whether you are signed in with the same account used to book it.`,
+      docs: null
+    };
+  }
+
+  if (/where.*health record|where.*records|health records|medical records|prescription|report/.test(m)) {
+    return {
+      msg: `Your records are in the <strong>Health Records</strong> section.\n\nYou can upload prescriptions, reports, scans, and view them there later whenever needed.`,
+      docs: null
+    };
+  }
+
+  if (/acidity|acid reflux|heartburn|gastric/.test(m)) {
+    const docs = DOCTORS.filter(d => d.spec.toLowerCase().includes('gastro')).slice(0, 3);
+    return {
+      msg: `For acidity, try eating <strong>banana, oats, rice, curd, plain khichdi, and coconut water</strong>.\nAvoid <strong>spicy food, fried food, coffee, cola, citrus on an empty stomach, and late-night meals</strong>.\n\nIf acidity is frequent, severe, causes vomiting, black stools, or chest pain, please see a doctor today.`,
+      docs
+    };
+  }
+
+  if (/i have a cold|cold|runny nose|blocked nose|common cold|sore throat/.test(m)) {
+    const docs = DOCTORS.filter(d => d.spec.toLowerCase().includes('general physician') || d.spec.toLowerCase().includes('pulmonologist')).slice(0, 3);
+    return {
+      msg: `For a simple cold, home care is usually enough at first.\nTry <strong>warm fluids, steam inhalation, good rest, light warm meals, and honey with warm water if suitable</strong>. Avoid very cold drinks and smoking.\n\nPlease see a doctor if you have breathing trouble, chest pain, high fever for more than 3 days, or severe weakness.`,
+      docs
+    };
+  }
+
+  for (const condition of commonConditions) {
+    if (condition.pattern.test(m)) {
+      return {
+        msg: condition.msg,
+        docs: condition.docs
+      };
+    }
+  }
+
+  if (/do i need to see a doctor today|should i see a doctor today|need.*doctor today|handled at home|home care/.test(m)) {
+    return {
+      msg: `If your symptoms are mild and improving, home care may be enough for now.\nPlease see a doctor today if symptoms are getting worse, lasting more than 2 to 3 days, or you have high fever, breathing trouble, chest pain, dehydration, fainting, or severe weakness.\n\nIf you tell me the exact symptom, I can guide you better.`,
+      docs: null
+    };
+  }
 
   for (const [kw, spec] of Object.entries(SPEC_MAP)) {
     if (kw.split('|').some(k => m.includes(k) || k.includes(m.split(' ')[0]))) {
