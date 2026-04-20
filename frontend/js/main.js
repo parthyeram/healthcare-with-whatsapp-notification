@@ -2,19 +2,21 @@
    Healthcare+  ·  Frontend Application Logic
    ===================================================== */
 
-const API = 'http://localhost:3001/api';
+const API = 'https://healthcare-with-whatsapp-notification-production.up.railway.app/api';
+
 
 /* ── State ──────────────────────────────────────────── */
-let user         = JSON.parse(localStorage.getItem('hcp_u')) || null;
-let selSlot      = null;
+let user = JSON.parse(localStorage.getItem('hcp_u')) || null;
+let selSlot = null;
 let appointments = [];
-let medicines    = [];
-let records      = [];
-let chatHist     = [];
-let isBotBusy    = false;
-let docPage      = 1;
-const PER_PAGE   = 9;
-const SID        = 'sid_' + Date.now();
+let medicines = [];
+let records = [];
+let chatHist = [];
+let isBotBusy = false;
+let docPage = 1;
+let currentApptFilter = 'all';
+const PER_PAGE = 9;
+const SID = 'sid_' + Date.now();
 
 function currentUserId() {
   return user?.id || 1;
@@ -104,7 +106,7 @@ function renderAuthState() {
   const authEl = document.getElementById('navAuth');
   const userEl = document.getElementById('navUser');
   const nameEl = document.getElementById('navUserName');
-  const avEl   = document.getElementById('navUserAv');
+  const avEl = document.getElementById('navUserAv');
   if (!authEl || !userEl) return;
 
   if (user) {
@@ -127,44 +129,44 @@ function logout() {
 
 /* ── Static Data ────────────────────────────────────── */
 const DOCTORS = [
-  {id:1, name:'Dr. Rajesh Kumar',    spec:'Cardiologist',       icon:'❤️',  hosp:'Apollo Hospitals',       city:'Chennai',    rating:4.8, rev:342, exp:15, fee:800,  days:'Mon,Tue,Wed,Thu,Fri'},
-  {id:2, name:'Dr. Priya Sharma',    spec:'Orthopedic',         icon:'🦴',  hosp:'Fortis Healthcare',      city:'Mohali',     rating:4.7, rev:218, exp:12, fee:700,  days:'Mon,Wed,Fri'},
-  {id:3, name:'Dr. Anand Mehta',     spec:'Neurologist',        icon:'🧠',  hosp:'Max Super Speciality',  city:'New Delhi',  rating:4.9, rev:456, exp:18, fee:900,  days:'Tue,Thu,Sat'},
-  {id:4, name:'Dr. Sunita Patel',    spec:'Dermatologist',      icon:'🔬',  hosp:'Kokilaben Ambani',       city:'Mumbai',     rating:4.6, rev:189, exp:10, fee:600,  days:'Mon,Tue,Thu,Fri'},
-  {id:5, name:'Dr. Vikram Singh',    spec:'Pediatrician',       icon:'👶',  hosp:'Narayana Health',        city:'Bengaluru',  rating:4.8, rev:312, exp:8,  fee:500,  days:'Mon–Fri'},
-  {id:6, name:'Dr. Meera Nair',      spec:'Gynecologist',       icon:'🏥',  hosp:'Apollo Hospitals',       city:'Chennai',    rating:4.7, rev:278, exp:14, fee:750,  days:'Mon,Wed,Fri'},
-  {id:7, name:'Dr. Suresh Reddy',    spec:'Gastroenterologist', icon:'🍽️', hosp:'Fortis Healthcare',      city:'Mohali',     rating:4.5, rev:156, exp:11, fee:700,  days:'Tue,Thu'},
-  {id:8, name:'Dr. Kavita Joshi',    spec:'Endocrinologist',    icon:'🩺',  hosp:'Max Super Speciality',  city:'New Delhi',  rating:4.6, rev:201, exp:9,  fee:650,  days:'Mon,Wed,Fri'},
-  {id:9, name:'Dr. Amit Gupta',      spec:'Psychiatrist',       icon:'🧘',  hosp:'Kokilaben Ambani',       city:'Mumbai',     rating:4.9, rev:334, exp:13, fee:800,  days:'Tue,Thu,Sat'},
-  {id:10,name:'Dr. Pooja Iyer',      spec:'Ophthalmologist',    icon:'👁️', hosp:'Narayana Health',        city:'Bengaluru',  rating:4.7, rev:145, exp:7,  fee:550,  days:'Mon–Fri'},
-  {id:11,name:'Dr. Rahul Verma',     spec:'General Physician',  icon:'👨‍⚕️',hosp:'Apollo Hospitals',      city:'Chennai',    rating:4.5, rev:567, exp:6,  fee:400,  days:'Mon–Sat'},
-  {id:12,name:'Dr. Nisha Kapoor',    spec:'Pulmonologist',      icon:'🫁',  hosp:'Fortis Healthcare',      city:'Mohali',     rating:4.6, rev:189, exp:10, fee:700,  days:'Mon,Wed,Thu,Fri'},
+  { id: 1, name: 'Dr. Rajesh Kumar', spec: 'Cardiologist', icon: '❤️', hosp: 'Apollo Hospitals', city: 'Chennai', rating: 4.8, rev: 342, exp: 15, fee: 800, days: 'Mon,Tue,Wed,Thu,Fri' },
+  { id: 2, name: 'Dr. Priya Sharma', spec: 'Orthopedic', icon: '🦴', hosp: 'Fortis Healthcare', city: 'Mohali', rating: 4.7, rev: 218, exp: 12, fee: 700, days: 'Mon,Wed,Fri' },
+  { id: 3, name: 'Dr. Anand Mehta', spec: 'Neurologist', icon: '🧠', hosp: 'Max Super Speciality', city: 'New Delhi', rating: 4.9, rev: 456, exp: 18, fee: 900, days: 'Tue,Thu,Sat' },
+  { id: 4, name: 'Dr. Sunita Patel', spec: 'Dermatologist', icon: '🔬', hosp: 'Kokilaben Ambani', city: 'Mumbai', rating: 4.6, rev: 189, exp: 10, fee: 600, days: 'Mon,Tue,Thu,Fri' },
+  { id: 5, name: 'Dr. Vikram Singh', spec: 'Pediatrician', icon: '👶', hosp: 'Narayana Health', city: 'Bengaluru', rating: 4.8, rev: 312, exp: 8, fee: 500, days: 'Mon–Fri' },
+  { id: 6, name: 'Dr. Meera Nair', spec: 'Gynecologist', icon: '🏥', hosp: 'Apollo Hospitals', city: 'Chennai', rating: 4.7, rev: 278, exp: 14, fee: 750, days: 'Mon,Wed,Fri' },
+  { id: 7, name: 'Dr. Suresh Reddy', spec: 'Gastroenterologist', icon: '🍽️', hosp: 'Fortis Healthcare', city: 'Mohali', rating: 4.5, rev: 156, exp: 11, fee: 700, days: 'Tue,Thu' },
+  { id: 8, name: 'Dr. Kavita Joshi', spec: 'Endocrinologist', icon: '🩺', hosp: 'Max Super Speciality', city: 'New Delhi', rating: 4.6, rev: 201, exp: 9, fee: 650, days: 'Mon,Wed,Fri' },
+  { id: 9, name: 'Dr. Amit Gupta', spec: 'Psychiatrist', icon: '🧘', hosp: 'Kokilaben Ambani', city: 'Mumbai', rating: 4.9, rev: 334, exp: 13, fee: 800, days: 'Tue,Thu,Sat' },
+  { id: 10, name: 'Dr. Pooja Iyer', spec: 'Ophthalmologist', icon: '👁️', hosp: 'Narayana Health', city: 'Bengaluru', rating: 4.7, rev: 145, exp: 7, fee: 550, days: 'Mon–Fri' },
+  { id: 11, name: 'Dr. Rahul Verma', spec: 'General Physician', icon: '👨‍⚕️', hosp: 'Apollo Hospitals', city: 'Chennai', rating: 4.5, rev: 567, exp: 6, fee: 400, days: 'Mon–Sat' },
+  { id: 12, name: 'Dr. Nisha Kapoor', spec: 'Pulmonologist', icon: '🫁', hosp: 'Fortis Healthcare', city: 'Mohali', rating: 4.6, rev: 189, exp: 10, fee: 700, days: 'Mon,Wed,Thu,Fri' },
 ];
 
 const HOSPITALS = [
-  {name:'Apollo Hospitals',             city:'Chennai',   rating:4.8, beds:500, est:1983, tie:2020, cls:'c1', ico:'🏥'},
-  {name:'Fortis Healthcare',            city:'Mohali',    rating:4.6, beds:350, est:1996, tie:2020, cls:'c2', ico:'🏨'},
-  {name:'Max Super Speciality',         city:'New Delhi', rating:4.7, beds:450, est:2000, tie:2021, cls:'c3', ico:'🏗️'},
-  {name:'Kokilaben Dhirubhai Ambani',   city:'Mumbai',    rating:4.9, beds:750, est:2009, tie:2021, cls:'c4', ico:'🏛️'},
-  {name:'Narayana Health',              city:'Bengaluru', rating:4.7, beds:600, est:2000, tie:2022, cls:'c5', ico:'🏦'},
+  { name: 'Apollo Hospitals', city: 'Chennai', rating: 4.8, beds: 500, est: 1983, tie: 2020, cls: 'c1', ico: '🏥' },
+  { name: 'Fortis Healthcare', city: 'Mohali', rating: 4.6, beds: 350, est: 1996, tie: 2020, cls: 'c2', ico: '🏨' },
+  { name: 'Max Super Speciality', city: 'New Delhi', rating: 4.7, beds: 450, est: 2000, tie: 2021, cls: 'c3', ico: '🏗️' },
+  { name: 'Kokilaben Dhirubhai Ambani', city: 'Mumbai', rating: 4.9, beds: 750, est: 2009, tie: 2021, cls: 'c4', ico: '🏛️' },
+  { name: 'Narayana Health', city: 'Bengaluru', rating: 4.7, beds: 600, est: 2000, tie: 2022, cls: 'c5', ico: '🏦' },
 ];
 
 /* symptom / body-part → specialist map */
 const SPEC_MAP = {
-  'heart|chest|cardiac|cardiovascular|bp|blood pressure|palpitation':   'Cardiologist',
-  'bone|joint|knee|spine|back|fracture|orthopedic|shoulder|hip|ankle':  'Orthopedic',
-  'brain|nerve|headache|migraine|epilepsy|stroke|neurological|dizzy':   'Neurologist',
-  'skin|acne|rash|eczema|hair|nail|dermatology|psoriasis|itching':       'Dermatologist',
-  'child|baby|infant|kid|pediatric|growth|fever child':                  'Pediatrician',
-  'eye|vision|blur|cataract|glaucoma|retina|spectacle|glasses':          'Ophthalmologist',
-  'ear|nose|throat|ent|sinus|tonsil|hearing|voice':                      'ENT Specialist',
-  'lung|breathing|asthma|cough|respiratory|bronchitis|pneumonia':        'Pulmonologist',
-  'stomach|liver|intestine|digestion|acidity|ulcer|gastric|constipation':'Gastroenterologist',
-  'diabetes|thyroid|hormone|insulin|sugar|endocrine|metabolism':         'Endocrinologist',
-  'mental|anxiety|depression|stress|insomnia|psychological|mood':        'Psychiatrist',
-  'kidney|bladder|urine|prostate|urinary tract|uti':                     'Urologist',
-  'women|pregnancy|uterus|ovary|menstrual|fertility|gynec':              'Gynecologist',
-  'cancer|tumor|chemotherapy|oncology|biopsy':                           'Oncologist',
+  'heart|chest|cardiac|cardiovascular|bp|blood pressure|palpitation': 'Cardiologist',
+  'bone|joint|knee|spine|back|fracture|orthopedic|shoulder|hip|ankle': 'Orthopedic',
+  'brain|nerve|headache|migraine|epilepsy|stroke|neurological|dizzy': 'Neurologist',
+  'skin|acne|rash|eczema|hair|nail|dermatology|psoriasis|itching': 'Dermatologist',
+  'child|baby|infant|kid|pediatric|growth|fever child': 'Pediatrician',
+  'eye|vision|blur|cataract|glaucoma|retina|spectacle|glasses': 'Ophthalmologist',
+  'ear|nose|throat|ent|sinus|tonsil|hearing|voice': 'ENT Specialist',
+  'lung|breathing|asthma|cough|respiratory|bronchitis|pneumonia': 'Pulmonologist',
+  'stomach|liver|intestine|digestion|acidity|ulcer|gastric|constipation': 'Gastroenterologist',
+  'diabetes|thyroid|hormone|insulin|sugar|endocrine|metabolism': 'Endocrinologist',
+  'mental|anxiety|depression|stress|insomnia|psychological|mood': 'Psychiatrist',
+  'kidney|bladder|urine|prostate|urinary tract|uti': 'Urologist',
+  'women|pregnancy|uterus|ovary|menstrual|fertility|gynec': 'Gynecologist',
+  'cancer|tumor|chemotherapy|oncology|biopsy': 'Oncologist',
 };
 
 /* ═══════════════════════════════════════════════════════
@@ -176,10 +178,10 @@ function showSec(id) {
   document.querySelectorAll('.nl').forEach(l => l.classList.toggle('on', l.dataset.s === id));
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  if (id === 'doctors')      renderDocs();
-  if (id === 'hospitals')    renderHosps();
+  if (id === 'doctors') renderDocs();
+  if (id === 'hospitals') renderHosps();
   if (id === 'appointments') loadAppts();
-  if (id === 'medicines')    loadMeds();
+  if (id === 'medicines') loadMeds();
 }
 
 window.addEventListener('scroll', () =>
@@ -232,18 +234,18 @@ let filteredDocs = [...DOCTORS];
 function renderDocs() {
   const spec = document.getElementById('specFilt')?.value || '';
   const hosp = document.getElementById('hospFilt')?.value || '';
-  const q    = (document.getElementById('docSearch')?.value || '').toLowerCase();
+  const q = (document.getElementById('docSearch')?.value || '').toLowerCase();
 
   filteredDocs = DOCTORS.filter(d => {
     const mSpec = !spec || d.spec.toLowerCase().includes(spec.toLowerCase());
     const mHosp = !hosp || d.hosp.includes(hosp);
-    const mQ    = !q   || d.name.toLowerCase().includes(q) || d.spec.toLowerCase().includes(q);
+    const mQ = !q || d.name.toLowerCase().includes(q) || d.spec.toLowerCase().includes(q);
     return mSpec && mHosp && mQ;
   });
 
   const start = (docPage - 1) * PER_PAGE;
   const slice = filteredDocs.slice(start, start + PER_PAGE);
-  const grid  = document.getElementById('docGrid');
+  const grid = document.getElementById('docGrid');
 
   if (!slice.length) {
     grid.innerHTML = '<div class="ldg"><span style="font-size:2rem">🔍</span><p>No doctors match your search.</p></div>';
@@ -294,7 +296,7 @@ function goPage(p) { docPage = p; renderDocs(); window.scrollTo({ top: 300, beha
 function filterDoc(s) { showSec('doctors'); setTimeout(() => { document.getElementById('docSearch').value = s; aiSearch(); }, 200); }
 
 function resetDocFilt() {
-  ['specFilt','hospFilt'].forEach(id => document.getElementById(id).value = '');
+  ['specFilt', 'hospFilt'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('docSearch').value = '';
   document.getElementById('aiSug').classList.remove('show');
   docPage = 1;
@@ -372,7 +374,7 @@ function paintHosps(list) {
           <span class="hchip">🛏 ${h.beds || '400+'} beds</span>
           <span class="hchip">Est. ${h.est || h.established_year}</span>
         </div>
-        <span class="tie">✅ Healthcare+ Partner since ${h.tie || new Date(h.tie_up_date||'').getFullYear()}</span>
+        <span class="tie">✅ Healthcare+ Partner since ${h.tie || new Date(h.tie_up_date || '').getFullYear()}</span>
       </div>
     </div>`).join('');
 }
@@ -382,7 +384,7 @@ function paintHosps(list) {
 ═══════════════════════════════════════════════════════ */
 function loadSlots() {
   const docId = document.getElementById('apptDoc').value;
-  const date  = document.getElementById('apptDate').value;
+  const date = document.getElementById('apptDate').value;
   selSlot = null;
   const g = document.getElementById('slotsG');
 
@@ -403,7 +405,7 @@ function genSlots(docId, date) {
   const slots = [];
   for (let h = 9; h < 17; h++) {
     for (let m = 0; m < 60; m += 30) {
-      const t = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+      const t = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
       slots.push({ time: t, available: !booked.includes(t) && Math.random() > 0.2 });
     }
   }
@@ -427,47 +429,80 @@ function selSlotFn(t, btn) {
 
 async function bookAppt() {
   const docEl = document.getElementById('apptDoc');
-  const date  = document.getElementById('apptDate').value;
-  const nm    = document.getElementById('pName').value.trim();
-  const ph    = document.getElementById('pPhone').value;
-  const rsn   = document.getElementById('apptRsn').value;
+  const date = document.getElementById('apptDate').value;
+  const nm = document.getElementById('pName').value.trim();
+  const ph = document.getElementById('pPhone').value;
+  const rsn = document.getElementById('apptRsn').value;
 
   if (!docEl.value) return toast('Please select a doctor', 'er');
-  if (!date)        return toast('Please select a date', 'er');
-  if (!selSlot)     return toast('Please select a time slot', 'er');
-  if (!nm)          return toast('Please enter your name', 'er');
+  if (!date) return toast('Please select a date', 'er');
+  if (!selSlot) return toast('Please select a time slot', 'er');
+  if (!nm) return toast('Please enter your name', 'er');
 
   const parts = docEl.options[docEl.selectedIndex].text.split(' — ');
-  const appt  = { id: Date.now(), docId: docEl.value, docName: parts[0], spec: parts[1] || '', date, time: selSlot, name: nm, phone: ph, reason: rsn, status: 'confirmed' };
-
-  /* Try to persist to backend */
-  fetch(`${API}/appointments`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ patient_id: user?.id || 1, doctor_id: parseInt(docEl.value), appointment_date: date, appointment_time: selSlot, reason: rsn })
-  }).catch(() => {});
+  const appt = { id: Date.now(), docId: docEl.value, docName: parts[0], spec: parts[1] || '', date, time: selSlot, name: nm, phone: ph, reason: rsn, status: 'confirmed' };
 
   appointments.unshift(appt);
-  renderAppts();
+  renderAppts(currentApptFilter);
+
+  /* Try to persist to backend */
+  try {
+    const res = await fetch(`${API}/appointments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ patient_id: user?.id || 1, doctor_id: parseInt(docEl.value), appointment_date: date, appointment_time: selSlot, reason: rsn })
+    });
+    const data = await res.json();
+    if (data.success && data.data) {
+      appointments = appointments.map(item => item.id === appt.id ? normalizeAppt(data.data) : item);
+      renderAppts(currentApptFilter);
+    }
+  } catch (_) { }
 
   /* Reset form */
   docEl.value = '';
-  ['apptDate','pName','pPhone','apptRsn'].forEach(id => document.getElementById(id).value = '');
+  ['apptDate', 'pName', 'pPhone', 'apptRsn'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('slotsG').innerHTML = '<p class="slot-hint">Select doctor and date to see slots</p>';
   selSlot = null;
 
   toast('🎉 Appointment booked successfully!', 'ok');
 }
 
-function loadAppts() { renderAppts(); }
+function normalizeAppt(row) {
+  return {
+    id: row.id,
+    docId: row.doctor_id || row.docId,
+    docName: row.doctor_name || row.docName || 'Doctor',
+    spec: row.specialization || row.spec || '',
+    date: row.appointment_date || row.date,
+    time: String(row.appointment_time || row.time || '').slice(0, 5),
+    name: row.name || user?.name || '',
+    phone: row.phone || user?.phone || '',
+    reason: row.reason || '',
+    status: row.status || 'pending'
+  };
+}
+
+function loadAppts() {
+  fetch(`${API}/appointments/user/${currentUserId()}`)
+    .then(r => r.json())
+    .then(d => {
+      if (!d.success || !Array.isArray(d.data)) throw new Error('Could not load appointments');
+      appointments = d.data.map(normalizeAppt);
+      renderAppts(currentApptFilter);
+    })
+    .catch(() => renderAppts(currentApptFilter));
+}
 
 function filtAppts(s, btn) {
+  currentApptFilter = s;
   document.querySelectorAll('.tab-row .tab').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
   renderAppts(s);
 }
 
 function renderAppts(filt = 'all') {
-  const el   = document.getElementById('apptList');
+  const el = document.getElementById('apptList');
   const list = filt === 'all' ? appointments : appointments.filter(a => a.status === filt);
   if (!list.length) { el.innerHTML = '<div class="empty"><span>📅</span><p>No appointments found.</p></div>'; return; }
 
@@ -481,14 +516,34 @@ function renderAppts(filt = 'all') {
         <span class="abadge ${a.status === 'confirmed' ? 'sc2' : a.status === 'pending' ? 'sp' : a.status === 'completed' ? 'sco' : 'sca'}">${cap(a.status)}</span>
       </div>
       ${a.status !== 'cancelled' && a.status !== 'completed'
-        ? `<button class="btn-d" onclick="cancelAppt(${a.id})">Cancel</button>`
-        : ''}
+      ? `<div class="appt-actions">
+             <button class="btn-c" onclick="completeAppt(${a.id})">Completed</button>
+             <button class="btn-d" onclick="cancelAppt(${a.id})">Cancel</button>
+           </div>`
+      : ''}
     </div>`).join('');
 }
 
 function cancelAppt(id) {
   const a = appointments.find(x => x.id === id);
-  if (a) { a.status = 'cancelled'; renderAppts(); toast('Appointment cancelled', 'in'); }
+  if (!a) return;
+  a.status = 'cancelled';
+  renderAppts(currentApptFilter);
+  fetch(`${API}/appointments/${id}`, { method: 'DELETE' }).catch(() => { });
+  toast('Appointment cancelled', 'in');
+}
+
+function completeAppt(id) {
+  const a = appointments.find(x => x.id === id);
+  if (!a) return;
+  a.status = 'completed';
+  renderAppts(currentApptFilter);
+  fetch(`${API}/appointments/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: 'completed' })
+  }).catch(() => { });
+  toast('Appointment marked as completed', 'ok');
 }
 
 function qBook(id, nm) {
@@ -501,7 +556,7 @@ function qBook(id, nm) {
 ═══════════════════════════════════════════════════════ */
 function prevFile(inp) {
   if (!inp.files.length) return;
-  const f     = inp.files[0];
+  const f = inp.files[0];
   const inner = document.getElementById('upInner');
   if (f.type.startsWith('image/')) {
     const r = new FileReader();
@@ -514,14 +569,14 @@ function prevFile(inp) {
 
 async function saveRec() {
   const title = document.getElementById('recTitle').value.trim();
-  const type  = document.getElementById('recType').value;
-  const date  = document.getElementById('recDate').value;
-  const fi    = document.getElementById('recFile');
+  const type = document.getElementById('recType').value;
+  const date = document.getElementById('recDate').value;
+  const fi = document.getElementById('recFile');
 
   if (!title) return toast('Please enter a record title', 'er');
-  if (!date)  return toast('Please enter the record date', 'er');
+  if (!date) return toast('Please enter the record date', 'er');
 
-  const icons = { prescription:'📋', lab_report:'🧪', xray:'🩻', mri:'🔬', scan:'📸', vaccination:'💉', other:'📁' };
+  const icons = { prescription: '📋', lab_report: '🧪', xray: '🩻', mri: '🔬', scan: '📸', vaccination: '💉', other: '📁' };
   let img = null;
   if (fi.files.length) {
     const rd = new FileReader();
@@ -530,24 +585,24 @@ async function saveRec() {
 
   records.unshift({
     id: Date.now(), title, record_type: type, record_date: date, icon: icons[type],
-    doctor_name:   document.getElementById('recDoc').value,
+    doctor_name: document.getElementById('recDoc').value,
     hospital_name: document.getElementById('recHosp').value,
-    tags:          document.getElementById('recTags').value,
-    description:   document.getElementById('recDesc').value,
-    image_path:    img,
+    tags: document.getElementById('recTags').value,
+    description: document.getElementById('recDesc').value,
+    image_path: img,
   });
   renderRecs();
 
   /* Try to persist */
   try {
     const fd = new FormData();
-    Object.entries({ user_id:1, record_type:type, title, record_date:date }).forEach(([k,v]) => fd.append(k,v));
+    Object.entries({ user_id: 1, record_type: type, title, record_date: date }).forEach(([k, v]) => fd.append(k, v));
     if (fi.files.length) fd.append('image', fi.files[0]);
-    fetch(`${API}/health-records`, { method:'POST', body:fd }).catch(() => {});
-  } catch {}
+    fetch(`${API}/health-records`, { method: 'POST', body: fd }).catch(() => { });
+  } catch { }
 
   /* Reset */
-  ['recTitle','recDoc','recHosp','recTags','recDesc'].forEach(id => document.getElementById(id).value = '');
+  ['recTitle', 'recDoc', 'recHosp', 'recTags', 'recDesc'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('recDate').value = '';
   document.getElementById('upInner').innerHTML =
     '<div class="up-ico"><i class="fas fa-cloud-upload-alt"></i></div>' +
@@ -560,7 +615,7 @@ async function saveRec() {
 function filtRecs() { renderRecs(document.getElementById('recFilt').value); }
 
 function renderRecs(filt = '') {
-  const el   = document.getElementById('recList');
+  const el = document.getElementById('recList');
   const list = filt ? records.filter(r => r.record_type === filt) : records;
   if (!list.length) {
     el.innerHTML = '<div class="empty" style="grid-column:1/-1"><span>📋</span><p>No records saved yet.</p></div>';
@@ -579,8 +634,8 @@ function renderRecs(filt = '') {
         <div class="racts">
           <button class="btn-d" onclick="delRec(${r.id})">🗑️</button>
           ${r.image_path
-            ? `<button onclick="viewImg('${r.image_path}')" style="background:var(--blue-l);color:var(--blue);border:1px solid var(--border);border-radius:6px;font-size:.7rem;padding:4px 8px;cursor:pointer">👁️ View</button>`
-            : ''}
+      ? `<button onclick="viewImg('${r.image_path}')" style="background:var(--blue-l);color:var(--blue);border:1px solid var(--border);border-radius:6px;font-size:.7rem;padding:4px 8px;cursor:pointer">👁️ View</button>`
+      : ''}
         </div>
       </div>
     </div>`).join('');
@@ -737,7 +792,7 @@ async function addMed() {
     toast(err.message || 'Medicine saved locally, but reminder setup failed', 'er');
   }
 
-  ['mName','mDose','mStart','mEnd','mDr','mNotes'].forEach(id => document.getElementById(id).value = '');
+  ['mName', 'mDose', 'mStart', 'mEnd', 'mDr', 'mNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('mStock').value = '';
   document.getElementById('mFreq').value = 'Once daily';
   renderAddReminderInputs();
@@ -750,7 +805,7 @@ function filtMeds(s, btn) {
 }
 
 function renderMeds(filt = 'active') {
-  const el   = document.getElementById('medList');
+  const el = document.getElementById('medList');
   const list = filt === 'all' ? medicines : medicines.filter(m => m.status === filt);
   if (!list.length) { el.innerHTML = '<div class="empty"><span>💊</span><p>No medicines here.</p></div>'; return; }
 
@@ -765,7 +820,7 @@ function renderMeds(filt = 'active') {
         <div class="mdos">${m.dosage || ''}</div>
         <div class="mfr">🔄 ${m.frequency} • ${m.timing}</div>
         ${m.prescribed_by ? `<div class="mdr">👨‍⚕️ ${m.prescribed_by}</div>` : ''}
-        ${m.start_date    ? `<div class="mdr">📅 ${fmtDate(m.start_date)}${m.end_date ? ' – ' + fmtDate(m.end_date) : ''}</div>` : ''}
+        ${m.start_date ? `<div class="mdr">📅 ${fmtDate(m.start_date)}${m.end_date ? ' – ' + fmtDate(m.end_date) : ''}</div>` : ''}
         <div class="mdr">⏰ Reminder: ${formatReminderSummary(m.reminder_times)}</div>
         <div class="mrem">
           <div class="mrem-grid" id="reminder-wrap-${m.id}"></div>
@@ -788,7 +843,7 @@ function renderMeds(filt = 'active') {
 }
 
 function renderSched() {
-  const el     = document.getElementById('sched');
+  const el = document.getElementById('sched');
   const active = medicines.filter(m => m.status === 'active');
   if (!active.length) { el.innerHTML = '<p style="font-size:.74rem;color:var(--gray);text-align:center">No active medicines</p>'; return; }
 
@@ -890,7 +945,7 @@ async function sendMsg() {
   document.getElementById('bsend').disabled = true;
 
   try {
-    const res  = await fetch(`${API}/chatbot/chat`, {
+    const res = await fetch(`${API}/chatbot/chat`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: msg, session_id: SID, conversation_history: chatHist.slice(-10) })
     });
@@ -1074,17 +1129,17 @@ function showDocSug(docs) {
 
 function addBubble(role, html) {
   const msgs = document.getElementById('cMsgs');
-  const d    = document.createElement('div');
+  const d = document.createElement('div');
   d.className = 'cmsg' + (role === 'u' ? ' u' : '');
   const av = role === 'u' ? (user?.name?.charAt(0) || 'U') : '🤖';
-  d.innerHTML = `<div class="cmav">${av}</div><div class="cmbub">${html.replace(/\n/g,'<br>')}</div>`;
+  d.innerHTML = `<div class="cmav">${av}</div><div class="cmbub">${html.replace(/\n/g, '<br>')}</div>`;
   msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
 }
 
 function showTyping() {
   const msgs = document.getElementById('cMsgs');
-  const d    = document.createElement('div');
+  const d = document.createElement('div');
   d.className = 'cmsg'; d.id = 'tdot';
   d.innerHTML = '<div class="cmav">🤖</div><div class="cmbub"><div class="tdots"><span></span><span></span><span></span></div></div>';
   msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
@@ -1102,17 +1157,17 @@ function qMsg(m) { document.getElementById('cInp').value = m; sendMsg(); }
 /* ═══════════════════════════════════════════════════════
    MODALS
 ═══════════════════════════════════════════════════════ */
-function openM(id)    { document.getElementById(id).classList.add('open'); }
-function closeM(id)   { document.getElementById(id).classList.remove('open'); }
-function swM(a, b)    { closeM(a); setTimeout(() => openM(b), 150); }
+function openM(id) { document.getElementById(id).classList.add('open'); }
+function closeM(id) { document.getElementById(id).classList.remove('open'); }
+function swM(a, b) { closeM(a); setTimeout(() => openM(b), 150); }
 
 /* Auth (mock – replace with real API calls) */
 function doLogin() {
   const email = document.getElementById('lEmail').value;
-  const pass  = document.getElementById('lPass').value;
+  const pass = document.getElementById('lPass').value;
   if (!email || !pass) return toast('Fill all fields', 'er');
 
-  fetch(`${API}/auth/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password:pass }) })
+  fetch(`${API}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: pass }) })
     .then(r => r.json())
     .then(d => {
       if (d.success) { user = d.user; localStorage.setItem('hcp_u', JSON.stringify(user)); renderAuthState(); closeM('mLogin'); toast(`✅ Welcome back, ${user.name}!`, 'ok'); }
@@ -1120,7 +1175,7 @@ function doLogin() {
     })
     .catch(() => {
       /* offline mock */
-      user = { id:1, name: email.split('@')[0], email };
+      user = { id: 1, name: email.split('@')[0], email };
       localStorage.setItem('hcp_u', JSON.stringify(user));
       renderAuthState();
       closeM('mLogin'); toast(`✅ Welcome back, ${user.name}!`, 'ok');
@@ -1128,23 +1183,20 @@ function doLogin() {
 }
 
 function doReg() {
-  const name  = document.getElementById('rName').value;
+  const name = document.getElementById('rName').value;
   const email = document.getElementById('rEmail').value;
   const phone = document.getElementById('rPhone').value;
-  const pass  = document.getElementById('rPass').value;
-  if (!name || !email || !phone || !pass) return toast('Fill all fields including WhatsApp number', 'er');
+  const pass = document.getElementById('rPass').value;
+  if (!name || !email || !phone || !pass) return toast('Fill all fields: name, email, phone, and password', 'er');
 
-  fetch(`${API}/auth/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, email, phone, password:pass }) })
+  fetch(`${API}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, phone, password: pass }) })
     .then(r => r.json())
     .then(d => {
       if (d.success) { user = d.user; localStorage.setItem('hcp_u', JSON.stringify(user)); renderAuthState(); closeM('mReg'); toast(`🎉 Welcome to Healthcare+, ${name}!`, 'ok'); }
       else toast(d.message, 'er');
     })
     .catch(() => {
-      user = { id:1, name, email, phone };
-      localStorage.setItem('hcp_u', JSON.stringify(user));
-      renderAuthState();
-      closeM('mReg'); toast(`🎉 Welcome to Healthcare+, ${name}!`, 'ok');
+      toast('Signup failed. Check Railway backend logs and try again.', 'er');
     });
 }
 
@@ -1181,10 +1233,10 @@ function viewDoc(id) {
    TOAST
 ═══════════════════════════════════════════════════════ */
 function toast(msg, type = 'in') {
-  const c  = document.getElementById('toasts');
+  const c = document.getElementById('toasts');
   const el = document.createElement('div');
   el.className = `toast ${type}`;
-  el.innerHTML = `<span>${{ok:'✅',er:'❌',in:'ℹ️'}[type]||'ℹ️'}</span><span>${msg}</span>`;
+  el.innerHTML = `<span>${{ ok: '✅', er: '❌', in: 'ℹ️' }[type] || 'ℹ️'}</span><span>${msg}</span>`;
   c.appendChild(el);
   setTimeout(() => {
     el.style.opacity = '0'; el.style.transform = 'translateX(100%)'; el.style.transition = '.3s';
@@ -1197,7 +1249,7 @@ function toast(msg, type = 'in') {
 ═══════════════════════════════════════════════════════ */
 function fmtDate(s) {
   if (!s) return '';
-  try { return new Date(s).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }); }
+  try { return new Date(s).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); }
   catch { return s; }
 }
 function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }

@@ -71,10 +71,10 @@ async function notifyOnAuth(type, userRecord) {
 /* ── Register ───────────────────────────────────────── */
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, phone, password, date_of_birth, gender, blood_group } = req.body;
+    const { name, email, phone, password } = req.body;
 
     if (!name || !email || !phone || !password)
-      return res.status(400).json({ success: false, message: 'Name, email, WhatsApp number and password are required' });
+      return res.status(400).json({ success: false, message: 'Name, email, phone, and password are required' });
 
     const [existing] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
     if (existing.length)
@@ -82,8 +82,8 @@ router.post('/register', async (req, res) => {
 
     const hash   = await bcrypt.hash(password, 12);
     const [result] = await db.query(
-      'INSERT INTO users (name, email, phone, password_hash, date_of_birth, gender, blood_group) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [name, email, phone || null, hash, date_of_birth || null, gender || null, blood_group || null]
+      'INSERT INTO users (name, email, phone, password_hash) VALUES (?, ?, ?, ?)',
+      [name, email, phone || null, hash]
     );
 
     const token = jwt.sign(

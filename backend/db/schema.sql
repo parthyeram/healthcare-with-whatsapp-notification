@@ -1,10 +1,6 @@
--- =====================================================
---  Healthcare+  ·  MySQL Schema + Seed Data
---  Run:  mysql -u root -p < backend/db/schema.sql
--- =====================================================
+USE railway;
+SHOW TABLES;
 
-CREATE DATABASE IF NOT EXISTS healthcare_plus CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE healthcare_plus;
 
 -- ── Users ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (

@@ -229,6 +229,7 @@ textarea.fc{resize:vertical;min-height:76px}
 .slot-hint{font-size:.78rem;color:var(--gray-l);padding:8px 0}
 .appt-item{display:flex;gap:12px;padding:14px;border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:10px;transition:var(--t)}
 .appt-item:hover{border-color:var(--blue)}
+.appt-actions{display:flex;flex-direction:column;gap:6px;align-self:flex-start}
 .aico{width:42px;height:42px;background:var(--blue-l);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
 .ainf{flex:1}
 .adoc{font-weight:700;font-size:.86rem;color:var(--slate-900)}
@@ -239,6 +240,8 @@ textarea.fc{resize:vertical;min-height:76px}
 .sc2{background:var(--green-l);color:var(--green)}
 .sco{background:var(--blue-l);color:var(--blue)}
 .sca{background:var(--red-l);color:var(--red)}
+.btn-c{background:var(--blue-l);color:var(--blue);border:1px solid #BFDBFE;padding:6px 12px;border-radius:6px;font-family:var(--font);font-size:.75rem;cursor:pointer;transition:var(--t)}
+.btn-c:hover{background:var(--blue);color:#fff}
 
 /* ── Health Records ──────────────────────────────────── */
 .rec-layout{display:grid;grid-template-columns:360px 1fr;gap:20px}

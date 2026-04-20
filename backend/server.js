@@ -10,9 +10,37 @@ const path    = require('path');
 const app  = express();
 const PORT = process.env.PORT || 3001;
 
+function normalizeOrigin(value) {
+  return String(value || '')
+    .trim()
+    .replace(/^['"]+|['"]+$/g, '')
+    .replace(/\/+$/, '');
+}
+
+function isSafeOrigin(value) {
+  return /^https?:\/\/[A-Za-z0-9.-]+(?::\d+)?$/.test(value);
+}
+
+const allowedOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '')
+  .split(/[\r\n,]+/)
+  .map(normalizeOrigin)
+  .filter(origin => origin && isSafeOrigin(origin));
+
 /* ── Middleware ─────────────────────────────────────── */
 app.use(cors({
-  origin:      process.env.FRONTEND_URL || '*',
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+
+    const safeOrigin = normalizeOrigin(origin);
+    if (!isSafeOrigin(safeOrigin)) {
+      return callback(new Error(`CORS blocked for invalid origin header: ${origin}`));
+    }
+
+    if (!allowedOrigins.length || allowedOrigins.includes(safeOrigin)) {
+      return callback(null, safeOrigin);
+    }
+    return callback(new Error(`CORS blocked for origin: ${safeOrigin}`));
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '50mb' }));
